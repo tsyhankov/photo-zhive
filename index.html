@@ -85,7 +85,53 @@ h2 {
   text-align: center;
   margin-bottom: 50px;
 }
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-auto-rows: 150px;
+  gap: 15px;
+}
 
+.portfolio-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: pointer;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.5s ease, transform 0.3s;
+}
+
+.portfolio-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.portfolio-item:hover img {
+  transform: scale(1.05);
+}
+
+/* крупные карточки */
+.portfolio-item.span2 {
+  grid-row: span 2;
+  grid-column: span 2;
+}
+
+/* анимация появления */
+.portfolio-item.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .portfolio-item.span2 {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+}
 /* портфолио */
 .grid {
   display: grid;
@@ -243,46 +289,7 @@ footer {
     margin-top: 20px;
   }
 }
-.masonry-grid {
-  column-count: 2; /* два столбца на телефоне */
-  column-gap: 15px;
-}
 
-@media (min-width: 768px) {
-  .masonry-grid {
-    column-count: 3; /* три столбца на планшете/компьютере */
-    column-gap: 20px;
-  }
-}
-
-.masonry-item {
-  display: inline-block;
-  width: 100%;
-  margin-bottom: 15px;
-  border-radius: 12px;
-  overflow: hidden;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: all 0.5s ease;
-  cursor: pointer;
-}
-
-.masonry-item img {
-  width: 100%;
-  display: block;
-  border-radius: 12px;
-  transition: transform 0.3s;
-}
-
-.masonry-item img:hover {
-  transform: scale(1.03);
-}
-
-/* анимация появления */
-.masonry-item.visible {
-  transform: translateY(0);
-  opacity: 1;
-}
 </style>
 </head>
 
@@ -300,15 +307,15 @@ footer {
 <section class="fade">
   <h2>Портфоліо</h2>
 
-  <div class="masonry-grid">
-    <div class="masonry-item"><img src="Images/photo1.jpg" alt="Фото 1"></div>
-    <div class="masonry-item"><img src="Images/photo2.jpg" alt="Фото 2"></div>
-    <div class="masonry-item"><img src="Images/photo3.jpg" alt="Фото 3"></div>
-    <div class="masonry-item"><img src="Images/photo4.jpg" alt="Фото 4"></div>
-    <div class="masonry-item"><img src="Images/photo1.jpg" alt="Фото 5"></div>
-    <div class="masonry-item"><img src="Images/photo2.jpg" alt="Фото 6"></div>
-    <div class="masonry-item"><img src="Images/photo3.jpg" alt="Фото 7"></div>
-    <div class="masonry-item"><img src="Images/photo4.jpg" alt="Фото 8"></div>
+  <div class="portfolio-grid">
+    <div class="portfolio-item span2"><img src="Images/photo1.jpg" alt="Фото 1"></div>
+    <div class="portfolio-item"><img src="Images/photo2.jpg" alt="Фото 2"></div>
+    <div class="portfolio-item span2"><img src="Images/photo3.jpg" alt="Фото 3"></div>
+    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фото 4"></div>
+    <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фото 5"></div>
+    <div class="portfolio-item span2"><img src="Images/photo2.jpg" alt="Фото 6"></div>
+    <div class="portfolio-item"><img src="Images/photo3.jpg" alt="Фото 7"></div>
+    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фото 8"></div>
   </div>
 </section>
 
@@ -551,23 +558,20 @@ toggle.addEventListener('click', () => {
 </script>
 <script>
 // плавная анимация при скролле
-const items = document.querySelectorAll('.masonry-item');
+const items = document.querySelectorAll('.portfolio-item');
 
 function revealOnScroll() {
   const triggerBottom = window.innerHeight * 0.9;
-
   items.forEach(item => {
     const top = item.getBoundingClientRect().top;
-    if(top < triggerBottom) {
-      item.classList.add('visible');
-    }
+    if(top < triggerBottom) item.classList.add('visible');
   });
 }
 
 window.addEventListener('scroll', revealOnScroll);
 window.addEventListener('load', revealOnScroll);
 
-// модальное окно при клике
+// модальное окно
 items.forEach(item => {
   item.addEventListener('click', () => {
     const modal = document.createElement('div');
@@ -580,7 +584,7 @@ items.forEach(item => {
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      z-index: 1000;
+      z-index:1000;
     `;
     const full = document.createElement('img');
     full.src = item.querySelector('img').src;
