@@ -21,7 +21,7 @@ h1,h2,h3 {
 
 header {
   height: 100vh;
-  background: url('images/hero.jpg') center/cover no-repeat;
+  background: url('Image/logo_temp.jpg') center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,6 +148,7 @@ footer {
   </div>
 </header>
 
+
 <section>
   <h2>Портфолио</h2>
   <div class="grid">
@@ -157,6 +158,7 @@ footer {
     <img src="Images/photo4.jpg">
   </div>
 </section>
+
 
 <section>
   <h2>О съёмке</h2>
@@ -202,6 +204,27 @@ footer {
   <p>Написать: Telegram / Instagram</p>
   <p>© Живое фото</p>
 </footer>
+
+<script>
+document.querySelectorAll('.grid img').forEach(img => {
+  img.onclick = () => {
+    const modal = document.createElement('div');
+    modal.style = `
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.9);display:flex;
+      align-items:center;justify-content:center;
+      cursor:pointer;z-index:1000;
+    `;
+    const full = document.createElement('img');
+    full.src = img.src;
+    full.style.maxWidth = '90%';
+    full.style.maxHeight = '90%';
+    modal.appendChild(full);
+    modal.onclick = () => modal.remove();
+    document.body.appendChild(modal);
+  }
+});
+</script>
 
 </body>
 </html>
