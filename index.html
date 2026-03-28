@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +13,7 @@ body {
   font-family: 'Inter', sans-serif;
   color: #222;
   background: #fafafa;
+  scroll-behavior: smooth;
 }
 
 h1,h2,h3 {
@@ -34,7 +35,7 @@ header::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.4);
 }
 
 .header-content {
@@ -44,12 +45,6 @@ header::after {
 
 header h1 {
   font-size: 52px;
-  margin-bottom: 10px;
-}
-
-header p {
-  font-size: 18px;
-  margin-bottom: 25px;
 }
 
 .btn {
@@ -58,13 +53,16 @@ header p {
   padding: 14px 28px;
   border-radius: 30px;
   text-decoration: none;
-  font-weight: 500;
-  transition: 0.3s;
+  display: inline-block;
+  margin-top: 15px;
 }
 
-.btn:hover {
-  background: black;
+.scroll-btn {
+  display: block;
+  margin-top: 20px;
   color: white;
+  text-decoration: none;
+  opacity: 0.8;
 }
 
 section {
@@ -76,7 +74,6 @@ section {
 h2 {
   text-align: center;
   margin-bottom: 50px;
-  font-size: 32px;
 }
 
 .grid {
@@ -88,13 +85,23 @@ h2 {
 .grid img {
   width: 100%;
   border-radius: 12px;
+  cursor: pointer;
   transition: 0.3s;
 }
 
 .grid img:hover {
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
+/* шаги */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap: 20px;
+  text-align: center;
+}
+
+/* цены */
 .prices {
   display: flex;
   justify-content: center;
@@ -108,24 +115,42 @@ h2 {
   border-radius: 15px;
   width: 260px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
-.card h3 {
-  margin-bottom: 10px;
-}
-
-.card strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 22px;
+.card.featured {
+  transform: scale(1.05);
+  border: 2px solid black;
 }
 
 .about {
   text-align: center;
   max-width: 700px;
   margin: auto;
-  font-size: 18px;
+}
+
+/* sticky кнопка */
+.fixed-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: black;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 30px;
+  text-decoration: none;
+  z-index: 999;
+}
+
+/* анимация */
+.fade {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.6s;
+}
+
+.fade.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 footer {
@@ -134,7 +159,6 @@ footer {
   text-align: center;
   padding: 50px 20px;
 }
-
 </style>
 </head>
 
@@ -142,136 +166,167 @@ footer {
 
 <header>
   <div class="header-content">
-    <h1>Фото Живе | Фотограф Жанна Циганкова | Дніпро</h1>
-    <p>Жінкам і сім’ям, які хочуть щирі фото без стресу</p>
-    <p>Продуманий образ і легкий процес — щоб фото хотілось переглядати</p>
-    <a href="https://t.me/Photo_zhive" class="btn">Питання і запис</a>
+    <h1>Живі фотосесії у Дніпрі</h1>
+    <p>100+ зйомок • Живі емоції • Без стресу</p>
+    <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
+    <a href="#portfolio" class="scroll-btn">↓ Подивитись портфоліо</a>
   </div>
 </header>
 
-
-<section>
+<section id="portfolio" class="fade">
   <h2>Портфоліо</h2>
   <div class="grid">
-    <img src="Images/photo1.jpg">
-    <img src="Images/photo2.jpg">
-    <img src="Images/photo3.jpg">
-    <img src="Images/photo4.jpg">
+    <img src="Images/photo1.jpg" loading="lazy">
+    <img src="Images/photo2.jpg" loading="lazy">
+    <img src="Images/photo3.jpg" loading="lazy">
+    <img src="Images/photo4.jpg" loading="lazy">
   </div>
 </section>
 
+<section class="fade">
+  <h2>Як проходить зйомка</h2>
+  <div class="steps">
+    <div>1. Знайомимось</div>
+    <div>2. Легка прогулянка</div>
+    <div>3. Підказки без напруги</div>
+    <div>4. Живі емоції</div>
+  </div>
+</section>
 
-<section>
+<section class="fade">
   <h2>Про зйомку</h2>
   <p class="about">
     Ми просто гуляємо, спілкуємося і ловимо справжні моменти.
-    Я підказую, але не змушую позувати. 
-    Усе проходить легко, спокійно та без стресу.
+    Без позування. Без стресу. Тільки ти і момент.
   </p>
 </section>
 
-<section>
+<section class="fade">
   <h2>Пакети</h2>
   <div class="prices">
     <div class="card">
-      <h3>Міни</h3>
-      <p>30 хвилин</p>
+      <h3>Міні</h3>
+      <p>30 хв</p>
       <p>10 фото</p>
       <strong>$50</strong>
+      <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
     </div>
-    <div class="card">
+
+    <div class="card featured">
       <h3>Стандарт</h3>
       <p>1 година</p>
       <p>30 фото</p>
       <strong>$90</strong>
+      <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
     </div>
+
     <div class="card">
       <h3>Преміум</h3>
       <p>2 години</p>
       <p>70 фото</p>
       <strong>$150</strong>
+      <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
     </div>
   </div>
 </section>
 
-<section>
-  <h2>Відгуки</h2>
-  <p class="about" id="review-text">
-    Завантаження відгуків...
+<section class="fade">
+  <h2>Чому саме я</h2>
+  <p class="about">
+    Без постановки • Без стресу • Живі фото • Комфортна атмосфера
   </p>
 </section>
 
-<script>
-// Загружаем отзывы из файла reviews.json
-let reviews = [];
-let currentIndex = 0;
-
-fetch('reviews.json')
-  .then(response => response.json())
-  .then(data => {
-    reviews = shuffle(data); // перемешиваем отзывы случайным образом
-    showReview();
-  })
-  .catch(err => {
-    console.error("Помилка завантаження відгуків:", err);
-    document.getElementById('review-text').innerText = "Відгуки наразі недоступні";
-  });
-
-// Функция для отображения текущего отзыва
-function showReview() {
-  if (reviews.length === 0) return;
-  const reviewEl = document.getElementById('review-text');
-  reviewEl.innerText = reviews[currentIndex];
-}
-
-// Переключение отзыва при клике
-document.getElementById('review-text').addEventListener('click', () => {
-  nextReview();
-});
-
-// Функция перехода к следующему отзыву
-function nextReview() {
-  currentIndex = (currentIndex + 1) % reviews.length;
-  showReview();
-}
-
-// Опционально: автоматическая смена каждые N секунд
-setInterval(nextReview, 10000); // каждые 10 секунд
-
-// Функция для случайной сортировки массива
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
-</script>
+<section class="fade">
+  <h2>Відгуки</h2>
+  <p class="about" id="review-text">Завантаження...</p>
+</section>
 
 <footer>
   <p>
-    Написати: 
-    <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener">Telegram</a> / 
-    <a href="https://www.instagram.com/photo_zhive/" target="_blank" rel="noopener">Instagram</a>
+    Написати:
+    <a href="https://t.me/Photo_zhive" target="_blank">Telegram</a> /
+    <a href="https://www.instagram.com/photo_zhive/" target="_blank">Instagram</a>
   </p>
   <p>© Фото Живе</p>
 </footer>
 
+<a href="https://t.me/Photo_zhive" class="fixed-btn">Написати</a>
+
 <script>
-document.querySelectorAll('.grid img').forEach(img => {
-  img.onclick = () => {
-    const modal = document.createElement('div');
-    modal.style = `
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      background:rgba(0,0,0,0.9);display:flex;
-      align-items:center;justify-content:center;
-      cursor:pointer;z-index:1000;
-    `;
-    const full = document.createElement('img');
-    full.src = img.src;
-    full.style.maxWidth = '90%';
-    full.style.maxHeight = '90%';
-    modal.appendChild(full);
-    modal.onclick = () => modal.remove();
-    document.body.appendChild(modal);
-  }
+// отзывы
+let reviews = [];
+let current = 0;
+
+fetch('reviews.json')
+.then(r => r.json())
+.then(data => {
+  reviews = data.sort(() => Math.random() - 0.5);
+  show();
 });
+
+function show() {
+  document.getElementById('review-text').innerText = reviews[current];
+}
+
+document.getElementById('review-text').onclick = () => {
+  current = (current + 1) % reviews.length;
+  show();
+};
+
+setInterval(() => {
+  current = (current + 1) % reviews.length;
+  show();
+}, 8000);
+
+// lightbox + стрелки + esc
+let currentImgIndex = 0;
+const imgs = document.querySelectorAll('.grid img');
+
+imgs.forEach((img, i) => {
+  img.onclick = () => openModal(i);
+});
+
+function openModal(i){
+  currentImgIndex = i;
+
+  const modal = document.createElement('div');
+  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:1000;";
+
+  const img = document.createElement('img');
+  img.src = imgs[i].src;
+  img.style.maxWidth = '90%';
+
+  modal.appendChild(img);
+
+  document.body.appendChild(modal);
+
+  modal.onclick = () => modal.remove();
+
+  document.onkeydown = (e) => {
+    if(e.key === 'Escape') modal.remove();
+    if(e.key === 'ArrowRight') change(1, img);
+    if(e.key === 'ArrowLeft') change(-1, img);
+  };
+
+  function change(dir, imgEl){
+    currentImgIndex = (currentImgIndex + dir + imgs.length) % imgs.length;
+    imgEl.src = imgs[currentImgIndex].src;
+  }
+}
+
+// анимация при скролле
+const faders = document.querySelectorAll('.fade');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add('visible');
+    }
+  });
+});
+
+faders.forEach(el => observer.observe(el));
 </script>
 
 </body>
