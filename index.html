@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Живое фото — фотограф в Днепре</title>
+<title>Фото Живе — фотограф у Дніпрі</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
@@ -196,14 +196,57 @@ footer {
 
 <section>
   <h2>Відгуки</h2>
-  <p class="about">
-    “Очень комфортно и легко прошло. Фото получились живые и настоящие!”
+  <p class="about" id="review-text">
+    Завантаження відгуків...
   </p>
 </section>
 
+<script>
+// Загружаем отзывы из файла reviews.json
+let reviews = [];
+let currentIndex = 0;
+
+fetch('reviews.json')
+  .then(response => response.json())
+  .then(data => {
+    reviews = shuffle(data); // перемешиваем отзывы случайным образом
+    showReview();
+  })
+  .catch(err => {
+    console.error("Помилка завантаження відгуків:", err);
+    document.getElementById('review-text').innerText = "Відгуки наразі недоступні";
+  });
+
+// Функция для отображения текущего отзыва
+function showReview() {
+  if (reviews.length === 0) return;
+  const reviewEl = document.getElementById('review-text');
+  reviewEl.innerText = reviews[currentIndex];
+}
+
+// Переключение отзыва при клике
+document.getElementById('review-text').addEventListener('click', () => {
+  nextReview();
+});
+
+// Функция перехода к следующему отзыву
+function nextReview() {
+  currentIndex = (currentIndex + 1) % reviews.length;
+  showReview();
+}
+
+// Опционально: автоматическая смена каждые N секунд
+setInterval(nextReview, 10000); // каждые 10 секунд
+
+// Функция для случайной сортировки массива
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+</script>
+
 <footer>
-  <p>Написать: Telegram / Instagram</p>
-  <p>© Живое фото</p>
+  <p>Написати: Telegram / Instagram</p>
+  <p>© Фото Живе</p>
 </footer>
 
 <script>
