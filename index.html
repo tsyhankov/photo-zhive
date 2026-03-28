@@ -159,6 +159,31 @@ footer {
   text-align: center;
   padding: 50px 20px;
 }
+.step {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.step:hover {
+  transform: translateY(-5px);
+}
+
+.step-content {
+  max-height: 0;
+  overflow: hidden;
+  font-size: 14px;
+  opacity: 0;
+  transition: 0.4s;
+}
+
+.step.active .step-content {
+  max-height: 200px;
+  opacity: 1;
+  margin-top: 10px;
+}
 </style>
 </head>
 
@@ -185,19 +210,86 @@ footer {
 
 <section class="fade">
   <h2>Як проходить зйомка</h2>
+
+  <p class="about">
+    Я роблю процес підготовки максимально простим і спокійним — 
+    щоб ви отримали задоволення не тільки від результату, а й від самої зйомки.
+  </p>
+
   <div class="steps">
-    <div>1. Знайомимось</div>
-    <div>2. Легка прогулянка</div>
-    <div>3. Підказки без напруги</div>
-    <div>4. Живі емоції</div>
+
+    <div class="step">
+      <h3>1. Формат</h3>
+      <p>Обираємо тип зйомки і тривалість</p>
+      <div class="step-content">
+        Індивідуальна, сімейна або парна зйомка. Обираємо локацію — студія чи вулиця.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>2. Мета</h3>
+      <p>Розуміємо для чого фото</p>
+      <div class="step-content">
+        Контент, фотокнига або просто досвід — це визначає стиль зйомки.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>3. Ідея</h3>
+      <p>Формуємо настрій</p>
+      <div class="step-content">
+        Допомагаю створити концепцію і підбираю мудборд після бронювання.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>4. Бронювання</h3>
+      <p>Фіксуємо дату</p>
+      <div class="step-content">
+        Передоплата 50%, допомога з підбором студії та спеціалістів.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>5. Підготовка</h3>
+      <p>Узгоджуємо деталі</p>
+      <div class="step-content">
+        Образи, локація, опитування — все щоб зйомка була ідеальною.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>6. План</h3>
+      <p>Знімаємо напругу</p>
+      <div class="step-content">
+        Надсилаю простий план, щоб ви почувалися впевнено.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>7. День зйомки</h3>
+      <p>Легка атмосфера</p>
+      <div class="step-content">
+        Я допомагаю і направляю, але без стресу і постановки.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>8. Результат</h3>
+      <p>Перші фото вже завтра</p>
+      <div class="step-content">
+        Швидкий прев’ю + повна серія через онлайн-галерею.
+      </div>
+    </div>
+
   </div>
 </section>
 
 <section class="fade">
   <h2>Про зйомку</h2>
   <p class="about">
-    Ми просто гуляємо, спілкуємося і ловимо справжні моменти.
-    Без позування. Без стресу. Тільки ти і момент.
+  <p>Жінкам і сім’ям, які хочуть щирі фото без стресу</p>
+  <p>Продуманий образ і легкий процес — щоб фото хотілось переглядати</p>
   </p>
 </section>
 
@@ -327,6 +419,14 @@ const observer = new IntersectionObserver(entries => {
 });
 
 faders.forEach(el => observer.observe(el));
+</script>
+
+<script>
+document.querySelectorAll('.step').forEach(step => {
+  step.onclick = () => {
+    step.classList.toggle('active');
+  };
+});
 </script>
 
 </body>
