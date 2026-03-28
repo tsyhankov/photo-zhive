@@ -16,10 +16,12 @@ body {
   scroll-behavior: smooth;
 }
 
+/* типографика */
 h1,h2,h3 {
   font-family: 'Playfair Display', serif;
 }
 
+/* header */
 header {
   height: 100vh;
   background: url('Images/hero_logo.jpg') center/cover no-repeat;
@@ -47,6 +49,7 @@ header h1 {
   font-size: 52px;
 }
 
+/* кнопки */
 .btn {
   background: white;
   color: black;
@@ -55,6 +58,12 @@ header h1 {
   text-decoration: none;
   display: inline-block;
   margin-top: 15px;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: black;
+  color: white;
 }
 
 .scroll-btn {
@@ -65,6 +74,7 @@ header h1 {
   opacity: 0.8;
 }
 
+/* секции */
 section {
   max-width: 1100px;
   margin: auto;
@@ -76,6 +86,7 @@ h2 {
   margin-bottom: 50px;
 }
 
+/* портфолио */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
@@ -96,9 +107,42 @@ h2 {
 /* шаги */
 .steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
   gap: 20px;
-  text-align: center;
+  margin-top: 40px; /* ✅ фикс налезания */
+}
+
+.step {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+  text-align: left;
+}
+
+/* ❌ убрали движение вверх */
+/* ✅ заменили на "дорогой" эффект */
+.step:hover {
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+}
+
+.step h3 {
+  margin-bottom: 5px;
+}
+
+.step-content {
+  max-height: 0;
+  overflow: hidden;
+  font-size: 14px;
+  opacity: 0;
+  transition: 0.4s;
+}
+
+.step.active .step-content {
+  max-height: 200px;
+  opacity: 1;
+  margin-top: 10px;
 }
 
 /* цены */
@@ -115,6 +159,11 @@ h2 {
   border-radius: 15px;
   width: 260px;
   text-align: center;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
 }
 
 .card.featured {
@@ -122,10 +171,12 @@ h2 {
   border: 2px solid black;
 }
 
+/* текст */
 .about {
   text-align: center;
   max-width: 700px;
   margin: auto;
+  line-height: 1.6;
 }
 
 /* sticky кнопка */
@@ -153,36 +204,28 @@ h2 {
   transform: translateY(0);
 }
 
+/* footer */
 footer {
   background: #111;
   color: white;
   text-align: center;
   padding: 50px 20px;
 }
-.step {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: 0.3s;
+.about-block {
+  max-width: 700px;
+  margin: auto;
+  text-align: center;
 }
 
-.step:hover {
-  transform: translateY(-5px);
+.about-main {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 10px;
 }
 
-.step-content {
-  max-height: 0;
-  overflow: hidden;
-  font-size: 14px;
-  opacity: 0;
-  transition: 0.4s;
-}
-
-.step.active .step-content {
-  max-height: 200px;
-  opacity: 1;
-  margin-top: 10px;
+.about-sub {
+  font-size: 16px;
+  color: #666;
 }
 </style>
 </head>
@@ -287,10 +330,16 @@ footer {
 
 <section class="fade">
   <h2>Про зйомку</h2>
-  <p class="about">
-  <p>Жінкам і сім’ям, які хочуть щирі фото без стресу</p>
-  <p>Продуманий образ і легкий процес — щоб фото хотілось переглядати</p>
-  </p>
+
+  <div class="about-block">
+    <p class="about-main">
+      Жінкам і сім’ям, які хочуть щирі фото без стресу
+    </p>
+
+    <p class="about-sub">
+      Продуманий образ і легкий процес — щоб фото хотілось переглядати
+    </p>
+  </div>
 </section>
 
 <section class="fade">
