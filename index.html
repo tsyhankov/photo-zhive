@@ -227,6 +227,22 @@ footer {
   font-size: 16px;
   color: #666;
 }
+/* кликабельный заголовок */
+.toggle-title {
+  cursor: pointer;
+}
+
+/* скрытие на мобилке */
+@media (max-width: 768px) {
+  .steps-wrapper {
+    display: none;
+  }
+
+  .steps-wrapper.active {
+    display: block;
+    margin-top: 20px;
+  }
+}
 </style>
 </head>
 
@@ -252,7 +268,9 @@ footer {
 </section>
 
 <section class="fade">
-  <h2>Як проходить зйомка</h2>
+  <h2 class="toggle-title">Як проходить зйомка</h2>
+
+  <div class="steps-wrapper">
 
   <p class="about">
     Я роблю процес підготовки максимально простим і спокійним — 
@@ -325,6 +343,7 @@ footer {
       </div>
     </div>
 
+  </div>
   </div>
 </section>
 
@@ -477,6 +496,13 @@ document.querySelectorAll('.step').forEach(step => {
   };
 });
 </script>
+<script>
+const toggle = document.querySelector('.toggle-title');
+const content = document.querySelector('.steps-wrapper');
 
+toggle.addEventListener('click', () => {
+  content.classList.toggle('active');
+});
+</script>
 </body>
 </html>
