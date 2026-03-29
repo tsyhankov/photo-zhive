@@ -48,13 +48,14 @@ header::after {
 header h1 {
   font-size: 52px;
 }
+
+/* ЗАГОЛОВОК З ПІДКАЗКОЮ */
 .toggle-title {
-  cursor: pointer;
   position: relative;
 }
 
 .toggle-hint {
-  display: block;
+  display: none; /* ХОВАЄМО НА ДЕСКТОПІ */
   font-size: 14px;
   color: #888;
   margin-top: 5px;
@@ -101,32 +102,31 @@ h2 {
 /* ПОРТФОЛІО У СТИЛІ PINTEREST               */
 /* ========================================= */
 .portfolio-grid {
-  column-count: 2; /* 2 колонки на телефоні */
+  column-count: 2; 
   column-gap: 15px;
 }
 
 @media (min-width: 768px) {
   .portfolio-grid {
-    column-count: 3; /* 3 колонки на планшеті */
+    column-count: 3; 
     column-gap: 20px;
   }
 }
 
 @media (min-width: 1200px) {
   .portfolio-grid {
-    column-count: 4; /* 4 колонки на великих екранах */
+    column-count: 4; 
   }
 }
 
 .portfolio-item {
-  display: inline-block; /* Важливо для masonry сітки */
+  display: inline-block; 
   width: 100%;
   margin-bottom: 15px;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   
-  /* Анімація появи */
   transform: translateY(20px);
   opacity: 0;
   transition: all 0.5s ease;
@@ -142,20 +142,18 @@ h2 {
   width: 100%;
   display: block;
   border-radius: 12px;
-  object-fit: cover; /* Дозволяє трохи підрізати фото для різних пропорцій */
+  object-fit: cover; 
   transition: transform 0.4s ease;
 }
 
-/* hover ефект */
 .portfolio-item:hover img {
   transform: scale(1.03);
 }
 
-/* Генерація різних розмірів для стилю Pinterest (макс обрізка 16%) */
-.portfolio-item:nth-child(4n+1) img { aspect-ratio: 2 / 3; } /* Оригінал 100% */
-.portfolio-item:nth-child(4n+2) img { aspect-ratio: 3 / 4; } /* Обрізка ~11% */
-.portfolio-item:nth-child(4n+3) img { aspect-ratio: 4 / 5; } /* Обрізка ~16% */
-.portfolio-item:nth-child(4n+4) img { aspect-ratio: 5 / 7; } /* Обрізка ~7%  */
+.portfolio-item:nth-child(4n+1) img { aspect-ratio: 2 / 3; } 
+.portfolio-item:nth-child(4n+2) img { aspect-ratio: 3 / 4; } 
+.portfolio-item:nth-child(4n+3) img { aspect-ratio: 4 / 5; } 
+.portfolio-item:nth-child(4n+4) img { aspect-ratio: 5 / 7; } 
 
 /* ========================================= */
 
@@ -281,8 +279,14 @@ footer {
   color: #666;
 }
 
-/* скрытие на мобилке */
+/* НАЛАШТУВАННЯ ДЛЯ МОБІЛЬНИХ ПРИСТРОЇВ */
 @media (max-width: 768px) {
+  .toggle-title {
+    cursor: pointer; /* Додаємо курсор-рукавичку на мобільних */
+  }
+  .toggle-hint {
+    display: block; /* ПОКАЗУЄМО ПІДКАЗКУ НА МОБІЛЬНИХ */
+  }
   .steps-wrapper { display: none; }
   .steps-wrapper.active { display: block; margin-top: 20px; }
 }
@@ -474,7 +478,7 @@ const observer = new IntersectionObserver((entries) => {
       setTimeout(() => {
         entry.target.classList.add('visible');
       }, i * 100);
-      observer.unobserve(entry.target); // Щоб анімація не програвалась повторно
+      observer.unobserve(entry.target); 
     }
   });
 }, { threshold: 0.1 });
@@ -534,6 +538,9 @@ const content = document.querySelector('.steps-wrapper');
 
 if (toggle && content) {
   toggle.addEventListener('click', () => {
+    // Якщо ми на комп'ютері (ширина екрану > 768px), клік не повинен приховувати блок, бо він там завжди розгорнутий
+    if (window.innerWidth > 768) return;
+
     content.classList.toggle('active');
     toggle.classList.toggle('active');
     
@@ -576,23 +583,20 @@ function openModal(i) {
   const img = document.createElement('img');
   img.src = items[i].querySelector('img').src;
   
-  // ВАЖЛИВО: Ці стилі роблять фото 100% видимим і не обрізаним у модалці
   img.style.maxWidth = '90vw'; 
   img.style.maxHeight = '90vh';
   img.style.borderRadius = '8px';
   img.style.objectFit = 'contain'; 
   img.style.cursor = 'default';
 
-  // Запобігаємо закриттю модалки при кліку на саме фото
   img.addEventListener('click', (e) => e.stopPropagation());
 
   modal.appendChild(img);
   document.body.appendChild(modal);
 
-  // закриття
   modal.addEventListener('click', () => {
     modal.remove();
-    document.onkeydown = null; // очищаємо події клавіатури
+    document.onkeydown = null; 
   });
 
   document.onkeydown = (e) => {
