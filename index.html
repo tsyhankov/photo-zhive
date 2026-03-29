@@ -48,6 +48,22 @@ header::after {
 header h1 {
   font-size: 52px;
 }
+.toggle-title {
+  cursor: pointer;
+  position: relative;
+}
+
+.toggle-hint {
+  display: block;
+  font-size: 14px;
+  color: #888;
+  margin-top: 5px;
+}
+
+/* анимация стрелки */
+.toggle-title.active .toggle-hint {
+  content: "↑ натисніть, щоб закрити";
+}
 
 /* кнопки */
 .btn {
@@ -86,41 +102,43 @@ h2 {
   margin-bottom: 50px;
 }
 .portfolio-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  grid-auto-rows: 150px;
-  gap: 15px;
+  column-count: 2;
+  column-gap: 15px;
+}
+
+@media (min-width: 768px) {
+  .portfolio-grid {
+    column-count: 3;
+    column-gap: 20px;
+  }
 }
 
 .portfolio-item {
-  position: relative;
-  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 15px;
   border-radius: 12px;
+  overflow: hidden;
   cursor: pointer;
+
   transform: translateY(20px);
   opacity: 0;
-  transition: all 0.5s ease, transform 0.3s;
+  transition: all 0.5s ease;
 }
 
 .portfolio-item img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto; /* ❗ ключевой момент */
   display: block;
-  transition: transform 0.3s;
+  border-radius: 12px;
 }
 
+/* hover */
 .portfolio-item:hover img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
-/* крупные карточки */
-.portfolio-item.span2 {
-  grid-row: span 2;
-  grid-column: span 2;
-}
-
-/* анимация появления */
+/* анимация */
 .portfolio-item.visible {
   transform: translateY(0);
   opacity: 1;
@@ -141,6 +159,7 @@ h2 {
 
 .grid img {
   width: 100%;
+  height: auto;
   border-radius: 12px;
   cursor: pointer;
   transition: 0.3s;
@@ -307,20 +326,23 @@ footer {
 <section class="fade">
   <h2>Портфоліо</h2>
 
-  <div class="portfolio-grid">
-    <div class="portfolio-item span2"><img src="Images/photo1.jpg" alt="Фото 1"></div>
-    <div class="portfolio-item"><img src="Images/photo2.jpg" alt="Фото 2"></div>
-    <div class="portfolio-item span2"><img src="Images/photo3.jpg" alt="Фото 3"></div>
-    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фото 4"></div>
-    <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фото 5"></div>
-    <div class="portfolio-item span2"><img src="Images/photo2.jpg" alt="Фото 6"></div>
-    <div class="portfolio-item"><img src="Images/photo3.jpg" alt="Фото 7"></div>
-    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фото 8"></div>
-  </div>
+<div class="portfolio-grid">
+  <div class="portfolio-item"><img src="Images/photo1.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo2.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo3.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo4.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo1.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo2.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo3.jpg"></div>
+  <div class="portfolio-item"><img src="Images/photo4.jpg"></div>
+</div>
+
 </section>
 
 <section class="fade">
-  <h2 class="toggle-title">Як проходить зйомка</h2>
+  <h2 class="toggle-title">
+  Як проходить зйомка <span class="toggle-hint">↓ натисніть, щоб відкрити</span>
+  </h2>
 
   <div class="steps-wrapper">
 
@@ -557,44 +579,71 @@ toggle.addEventListener('click', () => {
 });
 </script>
 <script>
-// плавная анимация при скролле
 const items = document.querySelectorAll('.portfolio-item');
 
-function revealOnScroll() {
-  const triggerBottom = window.innerHeight * 0.9;
-  items.forEach(item => {
-    const top = item.getBoundingClientRect().top;
-    if(top < triggerBottom) item.classList.add('visible');
+/* плавное появление при скролле */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+      }, i * 100); // каскадная анимация
+    }
   });
+}, { threshold: 0.2 });
+
+items.forEach(item => observer.observe(item));
+
+/* модалка с норм UX */
+items.forEach((item, index) => {
+  item.addEventListener('click', () => openModal(index));
+});
+
+let currentIndex = 0;
+
+function openModal(i) {
+  currentIndex = i;
+
+  const modal = document.createElement('div');
+  modal.style = `
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.95);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+  `;
+
+  const img = document.createElement('img');
+  img.src = items[i].querySelector('img').src;
+  img.style.maxWidth = '90%';
+  img.style.maxHeight = '90%';
+  img.style.borderRadius = '12px';
+
+  modal.appendChild(img);
+  document.body.appendChild(modal);
+
+  /* закрытие */
+  modal.addEventListener('click', () => modal.remove());
+
+  document.onkeydown = (e) => {
+    if (e.key === 'Escape') modal.remove();
+    if (e.key === 'ArrowRight') change(1, img);
+    if (e.key === 'ArrowLeft') change(-1, img);
+  };
+
+  function change(dir, imgEl) {
+    currentIndex = (currentIndex + dir + items.length) % items.length;
+    imgEl.src = items[currentIndex].querySelector('img').src;
+  }
 }
-
-window.addEventListener('scroll', revealOnScroll);
-window.addEventListener('load', revealOnScroll);
-
-// модальное окно
-items.forEach(item => {
-  item.addEventListener('click', () => {
-    const modal = document.createElement('div');
-    modal.style = `
-      position: fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      background: rgba(0,0,0,0.9);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      z-index:1000;
-    `;
-    const full = document.createElement('img');
-    full.src = item.querySelector('img').src;
-    full.style.maxWidth = '90%';
-    full.style.maxHeight = '90%';
-    full.style.borderRadius = '12px';
-    modal.appendChild(full);
-    modal.onclick = () => modal.remove();
-    document.body.appendChild(modal);
-  });
+</script>
+<script> 
+  toggle.addEventListener('click', () => {
+  content.classList.toggle('active');
+  toggle.classList.toggle('active');
 });
 </script>
 </body>
