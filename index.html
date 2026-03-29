@@ -488,118 +488,89 @@ footer {
 <a href="https://t.me/Photo_zhive" class="fixed-btn">Написати</a>
 
 <script>
-// отзывы
-let reviews = [];
-let current = 0;
-
-fetch('reviews.json')
-.then(r => r.json())
-.then(data => {
-  reviews = data.sort(() => Math.random() - 0.5);
-  show();
-});
-
-function show() {
-  document.getElementById('review-text').innerText = reviews[current];
-}
-
-document.getElementById('review-text').onclick = () => {
-  current = (current + 1) % reviews.length;
-  show();
-};
-
-setInterval(() => {
-  current = (current + 1) % reviews.length;
-  show();
-}, 8000);
-
-// lightbox + стрелки + esc
-let currentImgIndex = 0;
-const imgs = document.querySelectorAll('.grid img');
-
-imgs.forEach((img, i) => {
-  img.onclick = () => openModal(i);
-});
-
-function openModal(i){
-  currentImgIndex = i;
-
-  const modal = document.createElement('div');
-  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:1000;";
-
-  const img = document.createElement('img');
-  img.src = imgs[i].src;
-  img.style.maxWidth = '90%';
-
-  modal.appendChild(img);
-
-  document.body.appendChild(modal);
-
-  modal.onclick = () => modal.remove();
-
-  document.onkeydown = (e) => {
-    if(e.key === 'Escape') modal.remove();
-    if(e.key === 'ArrowRight') change(1, img);
-    if(e.key === 'ArrowLeft') change(-1, img);
-  };
-
-  function change(dir, imgEl){
-    currentImgIndex = (currentImgIndex + dir + imgs.length) % imgs.length;
-    imgEl.src = imgs[currentImgIndex].src;
-  }
-}
-
-// анимация при скролле
-const faders = document.querySelectorAll('.fade');
-
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if(entry.isIntersecting){
-      entry.target.classList.add('visible');
-    }
-  });
-});
-
-faders.forEach(el => observer.observe(el));
-</script>
-
-<script>
-document.querySelectorAll('.step').forEach(step => {
-  step.onclick = () => {
-    step.classList.toggle('active');
-  };
-});
-</script>
-<script>
-const toggle = document.querySelector('.toggle-title');
-const content = document.querySelector('.steps-wrapper');
-
-toggle.addEventListener('click', () => {
-  content.classList.toggle('active');
-});
-</script>
-<script>
-const items = document.querySelectorAll('.portfolio-item');
-
-/* плавное появление при скролле */
+// =======================
+// 1. АНИМАЦИЯ (единый observer)
+// =======================
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry, i) => {
     if (entry.isIntersecting) {
       setTimeout(() => {
         entry.target.classList.add('visible');
-      }, i * 100); // каскадная анимация
+      }, i * 100);
     }
   });
 }, { threshold: 0.2 });
 
-items.forEach(item => observer.observe(item));
+document.querySelectorAll('.fade, .portfolio-item')
+  .forEach(el => observer.observe(el));
 
-/* модалка с норм UX */
+
+// =======================
+// 2. ОТЗЫВЫ
+// =======================
+let reviews = [];
+let current = 0;
+
+fetch('reviews.json')
+  .then(r => r.json())
+  .then(data => {
+    reviews = data.sort(() => Math.random() - 0.5);
+    showReview();
+  })
+  .catch(() => {
+    document.getElementById('review-text').innerText = "Відгуки недоступні";
+  });
+
+function showReview() {
+  if (reviews.length === 0) return;
+  document.getElementById('review-text').innerText = reviews[current];
+}
+
+document.getElementById('review-text').onclick = () => {
+  current = (current + 1) % reviews.length;
+  showReview();
+};
+
+setInterval(() => {
+  if (reviews.length === 0) return;
+  current = (current + 1) % reviews.length;
+  showReview();
+}, 8000);
+
+
+// =======================
+// 3. ШАГИ (раскрытие)
+// =======================
+document.querySelectorAll('.step').forEach(step => {
+  step.addEventListener('click', () => {
+    step.classList.toggle('active');
+  });
+});
+
+
+// =======================
+// 4. TOGGLE БЛОКА (мобилка)
+// =======================
+const toggle = document.querySelector('.toggle-title');
+const content = document.querySelector('.steps-wrapper');
+
+if (toggle && content) {
+  toggle.addEventListener('click', () => {
+    content.classList.toggle('active');
+    toggle.classList.toggle('active');
+  });
+}
+
+
+// =======================
+// 5. ПОРТФОЛИО (модалка + стрелки)
+// =======================
+const items = document.querySelectorAll('.portfolio-item');
+let currentIndex = 0;
+
 items.forEach((item, index) => {
   item.addEventListener('click', () => openModal(index));
 });
-
-let currentIndex = 0;
 
 function openModal(i) {
   currentIndex = i;
@@ -625,7 +596,7 @@ function openModal(i) {
   modal.appendChild(img);
   document.body.appendChild(modal);
 
-  /* закрытие */
+  // закрытие
   modal.addEventListener('click', () => modal.remove());
 
   document.onkeydown = (e) => {
@@ -640,11 +611,6 @@ function openModal(i) {
   }
 }
 </script>
-<script> 
-  toggle.addEventListener('click', () => {
-  content.classList.toggle('active');
-  toggle.classList.toggle('active');
-});
-</script>
+
 </body>
 </html>
