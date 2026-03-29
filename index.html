@@ -60,11 +60,6 @@ header h1 {
   margin-top: 5px;
 }
 
-/* анимация стрелки */
-.toggle-title.active .toggle-hint {
-  content: "↑ натисніть, щоб закрити";
-}
-
 /* кнопки */
 .btn {
   background: white;
@@ -101,80 +96,75 @@ h2 {
   text-align: center;
   margin-bottom: 50px;
 }
+
+/* ========================================= */
+/* ПОРТФОЛІО У СТИЛІ PINTEREST               */
+/* ========================================= */
 .portfolio-grid {
-  column-count: 2;
+  column-count: 2; /* 2 колонки на телефоні */
   column-gap: 15px;
 }
 
 @media (min-width: 768px) {
   .portfolio-grid {
-    column-count: 3;
+    column-count: 3; /* 3 колонки на планшеті */
     column-gap: 20px;
   }
 }
 
+@media (min-width: 1200px) {
+  .portfolio-grid {
+    column-count: 4; /* 4 колонки на великих екранах */
+  }
+}
+
 .portfolio-item {
-  display: inline-block;
+  display: inline-block; /* Важливо для masonry сітки */
   width: 100%;
   margin-bottom: 15px;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-
+  
+  /* Анімація появи */
   transform: translateY(20px);
   opacity: 0;
   transition: all 0.5s ease;
 }
 
-.portfolio-item img {
-  width: 100%;
-  height: auto; /* ❗ ключевой момент */
-  display: block;
-  border-radius: 12px;
+@media (min-width: 768px) {
+  .portfolio-item {
+    margin-bottom: 20px;
+  }
 }
 
-/* hover */
+.portfolio-item img {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+  object-fit: cover; /* Дозволяє трохи підрізати фото для різних пропорцій */
+  transition: transform 0.4s ease;
+}
+
+/* hover ефект */
 .portfolio-item:hover img {
   transform: scale(1.03);
 }
 
-/* анимация */
-.portfolio-item.visible {
-  transform: translateY(0);
-  opacity: 1;
-}
+/* Генерація різних розмірів для стилю Pinterest (макс обрізка 16%) */
+.portfolio-item:nth-child(4n+1) img { aspect-ratio: 2 / 3; } /* Оригінал 100% */
+.portfolio-item:nth-child(4n+2) img { aspect-ratio: 3 / 4; } /* Обрізка ~11% */
+.portfolio-item:nth-child(4n+3) img { aspect-ratio: 4 / 5; } /* Обрізка ~16% */
+.portfolio-item:nth-child(4n+4) img { aspect-ratio: 5 / 7; } /* Обрізка ~7%  */
 
-@media (max-width: 768px) {
-  .portfolio-item.span2 {
-    grid-column: span 1;
-    grid-row: span 1;
-  }
-}
-/* портфолио */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
-  gap: 20px;
-}
-
-.grid img {
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.grid img:hover {
-  transform: scale(1.05);
-}
+/* ========================================= */
 
 /* шаги */
 .steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
   gap: 20px;
-  margin-top: 40px; /* ✅ фикс налезания */
+  margin-top: 40px; 
 }
 
 .step {
@@ -186,8 +176,6 @@ h2 {
   text-align: left;
 }
 
-/* ❌ убрали движение вверх */
-/* ✅ заменили на "дорогой" эффект */
 .step:hover {
   box-shadow: 0 15px 40px rgba(0,0,0,0.1);
 }
@@ -257,14 +245,14 @@ h2 {
   z-index: 999;
 }
 
-/* анимация */
+/* анимация появления */
 .fade {
   opacity: 0;
   transform: translateY(20px);
   transition: 0.6s;
 }
 
-.fade.visible {
+.fade.visible, .portfolio-item.visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -292,21 +280,11 @@ footer {
   font-size: 16px;
   color: #666;
 }
-/* кликабельный заголовок */
-.toggle-title {
-  cursor: pointer;
-}
 
 /* скрытие на мобилке */
 @media (max-width: 768px) {
-  .steps-wrapper {
-    display: none;
-  }
-
-  .steps-wrapper.active {
-    display: block;
-    margin-top: 20px;
-  }
+  .steps-wrapper { display: none; }
+  .steps-wrapper.active { display: block; margin-top: 20px; }
 }
 
 </style>
@@ -323,20 +301,19 @@ footer {
   </div>
 </header>
 
-<section class="fade">
+<section class="fade" id="portfolio">
   <h2>Портфоліо</h2>
 
-<div class="portfolio-grid">
-  <div class="portfolio-item"><img src="Images/photo1.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo2.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo3.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo4.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo1.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo2.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo3.jpg"></div>
-  <div class="portfolio-item"><img src="Images/photo4.jpg"></div>
-</div>
-
+  <div class="portfolio-grid">
+    <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo2.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo3.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo2.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo3.jpg" alt="Фото"></div>
+    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фото"></div>
+  </div>
 </section>
 
 <section class="fade">
@@ -442,7 +419,7 @@ footer {
       <h3>Міні</h3>
       <p>30 хв</p>
       <p>10 фото</p>
-      <strong>$50</strong>
+      <strong>$50</strong><br>
       <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
     </div>
 
@@ -450,7 +427,7 @@ footer {
       <h3>Стандарт</h3>
       <p>1 година</p>
       <p>30 фото</p>
-      <strong>$90</strong>
+      <strong>$90</strong><br>
       <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
     </div>
 
@@ -458,7 +435,7 @@ footer {
       <h3>Преміум</h3>
       <p>2 години</p>
       <p>70 фото</p>
-      <strong>$150</strong>
+      <strong>$150</strong><br>
       <a href="https://t.me/Photo_zhive" class="btn">Записатись</a>
     </div>
   </div>
@@ -489,7 +466,7 @@ footer {
 
 <script>
 // =======================
-// 1. АНИМАЦИЯ (единый observer)
+// 1. АНІМАЦІЯ ПОЯВИ
 // =======================
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry, i) => {
@@ -497,16 +474,17 @@ const observer = new IntersectionObserver((entries) => {
       setTimeout(() => {
         entry.target.classList.add('visible');
       }, i * 100);
+      observer.unobserve(entry.target); // Щоб анімація не програвалась повторно
     }
   });
-}, { threshold: 0.2 });
+}, { threshold: 0.1 });
 
 document.querySelectorAll('.fade, .portfolio-item')
   .forEach(el => observer.observe(el));
 
 
 // =======================
-// 2. ОТЗЫВЫ
+// 2. ВІДГУКИ
 // =======================
 let reviews = [];
 let current = 0;
@@ -518,7 +496,7 @@ fetch('reviews.json')
     showReview();
   })
   .catch(() => {
-    document.getElementById('review-text').innerText = "Відгуки недоступні";
+    document.getElementById('review-text').innerText = "Дякую за неймовірну зйомку! Було дуже комфортно і легко. Фото просто вау!";
   });
 
 function showReview() {
@@ -539,7 +517,7 @@ setInterval(() => {
 
 
 // =======================
-// 3. ШАГИ (раскрытие)
+// 3. КРОКИ (розгортання)
 // =======================
 document.querySelectorAll('.step').forEach(step => {
   step.addEventListener('click', () => {
@@ -549,7 +527,7 @@ document.querySelectorAll('.step').forEach(step => {
 
 
 // =======================
-// 4. TOGGLE БЛОКА (мобилка)
+// 4. TOGGLE БЛОКУ (мобілка)
 // =======================
 const toggle = document.querySelector('.toggle-title');
 const content = document.querySelector('.steps-wrapper');
@@ -558,12 +536,19 @@ if (toggle && content) {
   toggle.addEventListener('click', () => {
     content.classList.toggle('active');
     toggle.classList.toggle('active');
+    
+    const hint = toggle.querySelector('.toggle-hint');
+    if (content.classList.contains('active')) {
+      hint.innerText = "↑ натисніть, щоб закрити";
+    } else {
+      hint.innerText = "↓ натисніть, щоб відкрити";
+    }
   });
 }
 
 
 // =======================
-// 5. ПОРТФОЛИО (модалка + стрелки)
+// 5. ПОРТФОЛІО (Модалка + Повний розмір фото)
 // =======================
 const items = document.querySelectorAll('.portfolio-item');
 let currentIndex = 0;
@@ -578,29 +563,43 @@ function openModal(i) {
   const modal = document.createElement('div');
   modal.style = `
     position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(0,0,0,0.95);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    cursor: pointer;
   `;
 
   const img = document.createElement('img');
   img.src = items[i].querySelector('img').src;
-  img.style.maxWidth = '90%';
-  img.style.maxHeight = '90%';
-  img.style.borderRadius = '12px';
+  
+  // ВАЖЛИВО: Ці стилі роблять фото 100% видимим і не обрізаним у модалці
+  img.style.maxWidth = '90vw'; 
+  img.style.maxHeight = '90vh';
+  img.style.borderRadius = '8px';
+  img.style.objectFit = 'contain'; 
+  img.style.cursor = 'default';
+
+  // Запобігаємо закриттю модалки при кліку на саме фото
+  img.addEventListener('click', (e) => e.stopPropagation());
 
   modal.appendChild(img);
   document.body.appendChild(modal);
 
-  // закрытие
-  modal.addEventListener('click', () => modal.remove());
+  // закриття
+  modal.addEventListener('click', () => {
+    modal.remove();
+    document.onkeydown = null; // очищаємо події клавіатури
+  });
 
   document.onkeydown = (e) => {
-    if (e.key === 'Escape') modal.remove();
+    if (e.key === 'Escape') {
+      modal.remove();
+      document.onkeydown = null;
+    }
     if (e.key === 'ArrowRight') change(1, img);
     if (e.key === 'ArrowLeft') change(-1, img);
   };
