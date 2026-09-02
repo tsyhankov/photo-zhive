@@ -55,7 +55,7 @@ header {
   overflow: hidden;
 }
 
-/* Анімація зуму фону (кінематографічний ефект) */
+/* Анімація зуму фону */
 .header-bg {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -69,7 +69,6 @@ header {
   100% { transform: scale(1.1); }
 }
 
-/* М'який градієнт замість суцільного чорного */
 header::after {
   content: "";
   position: absolute;
@@ -199,11 +198,35 @@ h2 i {
   transform: scale(1.04);
 }
 
-/* Генерація сітки */
 .portfolio-item:nth-child(4n+1) img { aspect-ratio: 2 / 3; } 
 .portfolio-item:nth-child(4n+2) img { aspect-ratio: 3 / 4; } 
 .portfolio-item:nth-child(4n+3) img { aspect-ratio: 4 / 5; } 
 .portfolio-item:nth-child(4n+4) img { aspect-ratio: 5 / 7; } 
+
+/* Посилання на Інстаграм під портфоліо */
+.portfolio-more {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.portfolio-more a {
+  display: inline-block;
+  font-size: 16px;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 12px 24px;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  transition: var(--transition);
+}
+
+.portfolio-more a:hover {
+  background: var(--text-main);
+  color: white;
+  border-color: var(--text-main);
+  transform: translateY(-3px);
+}
 
 /* =======================
    КРОКИ ЗЙОМКИ
@@ -258,26 +281,26 @@ h2 i {
 .prices {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
 .card {
   background: white;
-  padding: 40px 30px;
+  padding: 40px 20px;
   border-radius: var(--radius);
-  width: 280px;
+  width: 260px; /* Трохи зменшено, щоб влізло 4 шт */
   text-align: center;
   transition: var(--transition);
   border: 1px solid #eaeaea;
   box-sizing: border-box;
 }
 
-.card h3 { font-size: 24px; margin-bottom: 15px; }
-.card p { margin: 8px 0; color: var(--text-muted); }
-.card strong { display: block; font-size: 32px; font-family: 'Playfair Display', serif; margin: 25px 0; }
+.card h3 { font-size: 22px; margin-bottom: 15px; }
+.card p { margin: 8px 0; font-size: 14px; color: var(--text-muted); }
+.card strong { display: block; font-size: 28px; font-family: 'Playfair Display', serif; margin: 25px 0; }
 
-.card .btn { width: 100%; box-sizing: border-box; background: #f5f5f5; }
+.card .btn { width: 100%; box-sizing: border-box; background: #f5f5f5; padding: 12px 20px;}
 .card .btn:hover { background: black; color: white; }
 
 /* Преміум виділення карток */
@@ -292,8 +315,28 @@ h2 i {
 .card.featured .btn { background: white; color: black; }
 .card.featured .btn:hover { background: #eee; }
 
+/* Текст-підказка під цінами */
+.prices-hint {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+.prices-hint a {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--text-main);
+  font-weight: 500;
+  text-decoration: underline;
+  transition: 0.3s;
+}
+.prices-hint a:hover {
+  color: #888;
+}
+
 @media (max-width: 768px) {
   .card.featured { transform: scale(1); }
+  .prices { gap: 30px; }
 }
 
 /* =======================
@@ -372,7 +415,7 @@ footer a:hover { color: #aaa; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* =======================
-   СТИЛІ ДЛЯ МОДАЛКИ (Нові)
+   СТИЛІ ДЛЯ МОДАЛКИ 
    ======================= */
 .modal-btn {
   position: absolute;
@@ -416,15 +459,19 @@ footer a:hover { color: #aaa; }
   <h2>Моє <i>бачення</i></h2>
   
   <div class="portfolio-grid">
-    <!-- ДОДАНО loading="lazy" та decoding="async" ДЛЯ ШВИДКОСТІ -->
-    <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo5.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo6.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo2.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo3.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo7.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo8.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
-    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Портфоліо" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo5.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo6.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo2.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo3.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo7.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo8.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+    <div class="portfolio-item"><img src="Images/photo4.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
+  </div>
+
+  <!-- Кнопка переходу в Інстаграм -->
+  <div class="portfolio-more fade">
+    <a href="https://www.instagram.com/photo_zhive/" target="_blank">Більше моїх робіт — в Instagram ➔</a>
   </div>
 </section>
 
@@ -488,33 +535,49 @@ footer a:hover { color: #aaa; }
 <section class="fade">
   <h2>Вартість <i>зйомки</i></h2>
   <div class="prices">
+    
+    <!-- Картка 1: Експрес -->
     <div class="card">
       <h3>Експрес</h3>
-      <p>20 / 30 / 40 хвилин</p>
-      <p>20 / 30 / 40 фото в кольорокорекції</p>
-      <strong>1 000 / 1 500 / 2 000 грн</strong>
+      <p>30 хвилин</p>
+      <p>~30 фото в кольорокорекції</p>
+      <strong>1 500 грн</strong>
       <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
     </div>
 
+    <!-- Картка 2: Індивідуальна -->
     <div class="card featured">
       <h3>Індивідуальна</h3>
-      <p>1 / 1,5 / 2 години</p>
-      <p>50 / 75 / 100 фото в кольорокорекції</p>
-      <p>або</p>
-      <p>10 / 15 / 20 фото в ретуші</p>
-      <strong>2 200 / 3 000 / 3 700 грн</strong>
+      <p>1 година</p>
+      <p>50 фото (колір) або 10 (ретуш)</p>
+      <strong>2 200 грн</strong>
       <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
     </div>
 
+    <!-- Картка 3: Сімейна/Парна -->
     <div class="card">
-      <h3>Сімейна або парна</h3>
-      <p>1 / 1,5 / 2 години</p>
-      <p>60 / 90 / 120 фото в кольорокорекції</p>
-      <p>або</p>
-      <p>12 / 18 / 24 фото в ретуші</p>
-      <strong>3 000 / 4 500 / 5 500 грн</strong>
+      <h3>Сімейна / Парна</h3>
+      <p>1 година</p>
+      <p>60 фото (колір) або 12 (ретуш)</p>
+      <strong>3 000 грн</strong>
       <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
     </div>
+
+    <!-- Картка 4: Репортажна -->
+    <div class="card">
+      <h3>Репортажна</h3>
+      <p>Від 1 години</p>
+      <p>Усі вдалі кадри в кольорі</p>
+      <strong>1 500 грн/год</strong>
+      <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
+    </div>
+
+  </div>
+
+  <!-- Блок-підказка під цінами -->
+  <div class="prices-hint fade">
+    <p>Потрібен інший час або формат зйомки?</p>
+    <a href="https://t.me/Photo_zhive" target="_blank">Напишіть мені, і ми підберемо ідеальні умови</a>
   </div>
 </section>
 
@@ -538,13 +601,13 @@ footer a:hover { color: #aaa; }
 <a href="https://t.me/Photo_zhive" target="_blank" class="fixed-btn">Написати</a>
 
 <script>
-// 1. Плавна поява елементів при скролі (Intersection Observer)
+// 1. Плавна поява елементів при скролі
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry, i) => {
     if (entry.isIntersecting) {
       setTimeout(() => {
         entry.target.classList.add('visible');
-      }, i * 80); // Трохи швидша затримка для динамічності
+      }, i * 80);
       observer.unobserve(entry.target); 
     }
   });
@@ -552,7 +615,7 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.fade, .portfolio-item').forEach(el => observer.observe(el));
 
-// 2. Відгуки (Змінюються автоматично або по кліку)
+// 2. Відгуки
 let reviews = [
   "Дякую за неймовірну зйомку! Було дуже комфортно і легко. Фото просто вау!",
   "Ніколи не думала, що можу так гарно виглядати на фото. Дуже дякую за атмосферу!",
@@ -570,7 +633,6 @@ function showReview() {
   }, 300);
 }
 
-// Спробуємо завантажити з файлу, якщо ні - використовуємо масив вище
 fetch('reviews.json')
   .then(r => r.json())
   .then(data => { if(data.length) reviews = data.sort(() => Math.random() - 0.5); showReview(); })
@@ -582,7 +644,7 @@ document.querySelector('.review-box').onclick = () => {
 };
 setInterval(() => { current = (current + 1) % reviews.length; showReview(); }, 7000);
 
-// 3. Акордеон для кроків (Desktop & Mobile)
+// 3. Акордеон для кроків
 document.querySelectorAll('.step').forEach(step => {
   step.addEventListener('click', () => step.classList.toggle('active'));
 });
@@ -592,14 +654,14 @@ const content = document.querySelector('.steps-wrapper');
 
 if (toggle && content) {
   toggle.addEventListener('click', () => {
-    if (window.innerWidth > 768) return; // Не працює на ПК
+    if (window.innerWidth > 768) return; 
     content.classList.toggle('active');
     const hint = toggle.querySelector('.toggle-hint');
     hint.innerText = content.classList.contains('active') ? "↑ натисніть, щоб закрити" : "↓ натисніть, щоб відкрити";
   });
 }
 
-// 4. ПОКРАЩЕНА Модалка (Gallery) з кнопками керування
+// 4. Модалка
 const items = document.querySelectorAll('.portfolio-item');
 let currentIndex = 0;
 
@@ -618,13 +680,11 @@ function openModal(i) {
     z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
   `;
 
-  // Фото
   const img = document.createElement('img');
   img.src = items[i].querySelector('img').src;
   img.style = `max-width: 90vw; max-height: 85vh; border-radius: 6px; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transition: opacity 0.2s;`;
-  img.addEventListener('click', (e) => e.stopPropagation()); // Не закривати при кліку на фото
+  img.addEventListener('click', (e) => e.stopPropagation()); 
 
-  // Кнопки UI
   const closeBtn = document.createElement('button');
   closeBtn.className = 'modal-btn modal-close'; closeBtn.innerHTML = '×';
   
@@ -639,10 +699,8 @@ function openModal(i) {
   modal.append(img, closeBtn, prevBtn, nextBtn);
   document.body.appendChild(modal);
   
-  // Плавна поява
   requestAnimationFrame(() => modal.style.opacity = 1);
 
-  // Закриття
   const closeModal = () => {
     modal.style.opacity = 0;
     setTimeout(() => modal.remove(), 300);
@@ -651,17 +709,15 @@ function openModal(i) {
   modal.addEventListener('click', closeModal);
   closeBtn.addEventListener('click', closeModal);
 
-  // Клавіатура
   document.onkeydown = (e) => {
     if (e.key === 'Escape') closeModal();
     if (e.key === 'ArrowRight') change(1);
     if (e.key === 'ArrowLeft') change(-1);
   };
 
-  // Зміна фото
   function change(dir) {
     currentIndex = (currentIndex + dir + items.length) % items.length;
-    img.style.opacity = 0; // ефект блимання
+    img.style.opacity = 0; 
     setTimeout(() => {
       img.src = items[currentIndex].querySelector('img').src;
       img.style.opacity = 1;
