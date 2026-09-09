@@ -443,6 +443,134 @@ footer a:hover { color: #aaa; }
   .modal-prev { left: 10px; }
   .modal-next { right: 10px; }
 }
+
+.hero-personal {
+  max-width: 660px;
+  margin: -10px auto 28px;
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.6;
+  opacity: .92;
+}
+
+.gallery-showcase {
+  max-width: 1100px;
+}
+
+.gallery-showcase-inner {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr);
+  align-items: center;
+  gap: 64px;
+}
+
+.gallery-showcase-copy h2 {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.gallery-showcase-copy .about-text {
+  text-align: left;
+  margin: 0 0 24px;
+  max-width: 520px;
+}
+
+.gallery-note {
+  margin: 0 0 28px;
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.gallery-link {
+  display: inline-block;
+  padding: 13px 24px;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.gallery-link:hover {
+  background: var(--text-main);
+  color: white;
+  border-color: var(--text-main);
+  transform: translateY(-3px);
+}
+
+.gallery-browser {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.08);
+}
+
+.gallery-browser-bar {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.gallery-browser-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d8d8d8;
+}
+
+.gallery-browser-content {
+  padding: 18px;
+  background: #f7f5f1;
+}
+
+.gallery-browser-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+
+.gallery-browser-grid {
+  columns: 3;
+  column-gap: 8px;
+}
+
+.gallery-browser-grid img {
+  width: 100%;
+  display: block;
+  margin-bottom: 8px;
+  border-radius: 8px;
+}
+
+@media (max-width: 850px) {
+  .gallery-showcase-inner {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .gallery-showcase-copy h2,
+  .gallery-showcase-copy .about-text {
+    text-align: center;
+  }
+
+  .gallery-showcase-copy .about-text {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .gallery-showcase-copy {
+    text-align: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .gallery-browser-grid { columns: 2; }
+  .gallery-browser-content { padding: 12px; }
+}
+
 </style>
 </head>
 
@@ -453,13 +581,15 @@ footer a:hover { color: #aaa; }
   <div class="header-content fade visible">
     <h1>Живі фотосесії <i>у Дніпрі</i></h1>
     <p>100+ зйомок • Живі емоції • Без стресу</p>
+    <p class="hero-personal">Я Жанна. Допомагаю вам бути собою перед камерою — без складних поз і напруги.</p>
     <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Записатись на зйомку</a>
     <a href="#portfolio" class="scroll-btn">↓ Подивитись портфоліо</a>
   </div>
 </header>
 
 <section class="fade" id="portfolio">
-  <h2>Моє <i>бачення</i></h2>
+  <h2>Мої <i>роботи</i></h2>
+  <p class="about-text">Живі моменти, справжні емоції та трохи магії світла.</p>
   
   <div class="portfolio-grid">
     <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
@@ -528,8 +658,42 @@ footer a:hover { color: #aaa; }
       </div>
       <div class="step">
         <h3>8. Результат</h3>
-        <p>Фото вже завтра</p>
-        <div class="step-content">Швидкий прев’ю + повна серія через красиву онлайн-галерею.</div>
+        <p>Частина фото вже завтра</p>
+        <div class="step-content">Частину готових фото ви отримуєте вже наступного дня, а повну серію — через персональну онлайн-галерею.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="fade gallery-showcase">
+  <div class="gallery-showcase-inner">
+    <div class="gallery-showcase-copy">
+      <h2>Ваші фото — у <i>персональній галереї</i></h2>
+      <p class="about-text">
+        Переглядайте готову серію онлайн, відкривайте фото у високій якості
+        та завантажуйте окремі кадри або всю зйомку одним архівом.
+      </p>
+      <p class="gallery-note">Частина готових фото — вже наступного дня.</p>
+      <a class="gallery-link" href="/gallery/">Відкрити галерею</a>
+    </div>
+
+    <div class="gallery-browser" aria-label="Приклад персональної онлайн-галереї">
+      <div class="gallery-browser-bar">
+        <span class="gallery-browser-dot"></span>
+        <span class="gallery-browser-dot"></span>
+        <span class="gallery-browser-dot"></span>
+      </div>
+      <div class="gallery-browser-content">
+        <div class="gallery-browser-brand">Photo Zhive</div>
+        <div class="gallery-browser-grid">
+          <img src="Images/photo1.jpg" alt="" loading="lazy" decoding="async">
+          <img src="Images/photo5.jpg" alt="" loading="lazy" decoding="async">
+          <img src="Images/photo6.jpg" alt="" loading="lazy" decoding="async">
+          <img src="Images/photo2.jpg" alt="" loading="lazy" decoding="async">
+          <img src="Images/photo3.jpg" alt="" loading="lazy" decoding="async">
+          <img src="Images/photo7.jpg" alt="" loading="lazy" decoding="async">
+        </div>
       </div>
     </div>
   </div>
@@ -587,7 +751,7 @@ footer a:hover { color: #aaa; }
 <section class="fade">
   <h2>Що кажуть <i>клієнти</i></h2>
   <div class="review-box">
-    <p id="review-text">Завантаження...</p>
+    <p id="review-text">«Дякую за неймовірну зйомку! Було дуже комфортно і легко. Фото просто вау!»</p>
   </div>
 </section>
 
@@ -626,8 +790,13 @@ let reviews = [
 ];
 let current = 0;
 
-function showReview() {
+function showReview(animate = true) {
   const el = document.getElementById('review-text');
+  if (!animate) {
+    el.innerText = `«${reviews[current]}»`;
+    el.style.opacity = 1;
+    return;
+  }
   el.style.opacity = 0;
   setTimeout(() => {
     el.innerText = `«${reviews[current]}»`;
@@ -638,8 +807,8 @@ function showReview() {
 
 fetch('reviews.json')
   .then(r => r.json())
-  .then(data => { if(data.length) reviews = data.sort(() => Math.random() - 0.5); showReview(); })
-  .catch(() => showReview());
+  .then(data => { if(data.length) reviews = data.sort(() => Math.random() - 0.5); showReview(false); })
+  .catch(() => showReview(false));
 
 document.querySelector('.review-box').onclick = () => {
   current = (current + 1) % reviews.length;
