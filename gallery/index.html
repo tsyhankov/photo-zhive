@@ -10,33 +10,26 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 .wrap{width:min(1120px,calc(100% - 40px));margin:auto}
-header{padding:42px 0 24px}
-.brand{font-family:Georgia,"Times New Roman",serif;font-size:17px;letter-spacing:.09em;text-transform:uppercase}
+header{padding:42px 0 24px}.brand{font-family:Georgia,"Times New Roman",serif;font-size:17px;letter-spacing:.09em;text-transform:uppercase}
 h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,5vw,66px);font-weight:400;line-height:1.04;margin:12px 0 0}
-.subtitle{color:var(--muted);font-size:16px;line-height:1.6;margin:18px 0 0;max-width:560px}
-.entry{max-width:620px;margin-top:32px}
-.entry-row{display:flex;gap:10px}
+.subtitle{color:var(--muted);font-size:16px;line-height:1.6;margin:18px 0 0;max-width:570px}
+.entry{max-width:650px;margin-top:32px}.entry-row{display:flex;gap:10px}
 input{width:100%;height:52px;padding:0 18px;border:1px solid var(--line);border-radius:14px;background:var(--white);font:inherit;font-size:16px;outline:none}
 input:focus{border-color:#888}
 button,.back,.download{border:0;background:#171717;color:#fff;border-radius:999px;padding:0 22px;height:52px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-.hint{margin:11px 2px 0;color:var(--muted);font-size:13px}
-.error{margin-top:16px;color:#8c2626;font-size:14px}
-.gallery-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:8px 0 28px}
-.gallery-title{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,5vw,62px);font-weight:400;line-height:1.05}
-.gallery-actions{display:flex;align-items:center;gap:16px}
-.count{font-size:14px;color:var(--muted)}
+.hint{margin:11px 2px 0;color:var(--muted);font-size:13px}.error{margin-top:16px;color:#8c2626;font-size:14px}
+.gallery-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:36px 0 28px}
+.gallery-title{margin:8px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,5vw,62px);font-weight:400;line-height:1.05;text-transform:none}
+.gallery-actions{display:flex;align-items:center;gap:16px}.count{font-size:14px;color:var(--muted)}
 .back{height:42px;padding:0 17px;background:transparent;color:var(--text);border:1px solid var(--line)}
 .grid{column-count:3;column-gap:14px;padding-bottom:60px}
 .item{break-inside:avoid;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#ece8e1;cursor:zoom-in}
-.item img{width:100%;height:auto;display:block;transition:transform .25s ease}
-.item:hover img{transform:scale(1.015)}
+.item img{width:100%;height:auto;display:block;transition:transform .25s ease}.item:hover img{transform:scale(1.015)}
 .loading{padding:24px 0;color:var(--muted)}
 footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);font-size:13px}
 .overlay{position:fixed;inset:0;z-index:20;background:rgba(12,12,12,.94);display:none;align-items:center;justify-content:center;padding:70px 22px 22px}
-.overlay.open{display:flex}
-.overlay img{max-width:94vw;max-height:86vh;object-fit:contain}
-.overlay .close,.overlay .download{position:fixed;top:18px;height:42px;background:#fff;color:#111}
-.overlay .close{right:18px}.overlay .download{left:18px}
+.overlay.open{display:flex}.overlay img{max-width:94vw;max-height:86vh;object-fit:contain}
+.overlay .close,.overlay .download{position:fixed;top:18px;height:42px;background:#fff;color:#111}.overlay .close{right:18px}.overlay .download{left:18px}
 @media(max-width:850px){.grid{column-count:2}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:space-between}}
 @media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{column-count:1}.gallery-title{font-size:42px}}
 </style>
@@ -52,21 +45,15 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
       <input id="codeInput" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Код галереї">
       <button id="openBtn" type="button">Відкрити галерею</button>
     </div>
-    <div class="hint">Код вказаний у повідомленні з посиланням на готові фотографії.</div>
+    <div class="hint">Код вказаний у повідомленні з готовими фотографіями.</div>
     <div class="error" id="entryError" hidden></div>
   </div>
 </header>
 
 <main id="galleryView" hidden>
   <div class="gallery-head">
-    <div>
-      <div class="brand">Photo Zhive</div>
-      <h1 class="gallery-title" id="galleryTitle">Галерея</h1>
-    </div>
-    <div class="gallery-actions">
-      <span class="count" id="count"></span>
-      <a class="back" href="./">← До вибору галереї</a>
-    </div>
+    <div><div class="brand">Photo Zhive</div><h1 class="gallery-title" id="galleryTitle">Галерея</h1></div>
+    <div class="gallery-actions"><span class="count" id="count"></span><a class="back" href="./">← До вибору галереї</a></div>
   </div>
   <div class="loading" id="status">Завантаження фотографій…</div>
   <section class="grid" id="grid"></section>
@@ -76,31 +63,38 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 </div>
 
 <div class="overlay" id="overlay">
-  <a class="download" id="downloadBtn" href="#" target="_blank" rel="noopener">Завантажити оригінал</a>
-  <button class="close" id="closeBtn" type="button">Закрити ✕</button>
-  <img id="viewer" alt="">
+<a class="download" id="downloadBtn" href="#" target="_blank" rel="noopener">Завантажити оригінал</a>
+<button class="close" id="closeBtn" type="button">Закрити ✕</button>
+<img id="viewer" alt="">
 </div>
 
 <script>
-const HIKBOX={
- apiBase:'https://217.24.165.253:20443/rest/1.1/share',
- accessToken:'65c4274a101f0043d621c8f39e4d438f:1788952047',
- shareId:'9UCYKO',
- rootPath:'/drives/disk_a1/Share/ext share'
-};
+let HIKBOX=null;
 const $=id=>document.getElementById(id);
-const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),
-openBtn=$('openBtn'),entryError=$('entryError'),galleryTitle=$('galleryTitle'),
-count=$('count'),status=$('status'),grid=$('grid'),overlay=$('overlay'),
-viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn');
+const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),openBtn=$('openBtn'),
+entryError=$('entryError'),galleryTitle=$('galleryTitle'),count=$('count'),status=$('status'),grid=$('grid'),
+overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn');
 
+function cleanCode(v){return v.trim().replace(/^\/+|\/+$/g,'')}
+function getCode(){return cleanCode(new URLSearchParams(location.search).get('code')||'')}
+function isImage(n=''){return /\.(jpe?g|png|webp|gif|heic)$/i.test(n)}
+function displayTitle(code){return code.replace(/[-_]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase())}
+
+async function loadConfig(){
+ const r=await fetch('./config.json?ts='+Date.now(),{cache:'no-store'});
+ if(!r.ok)throw new Error('CONFIG');
+ HIKBOX=await r.json();
+}
 function apiUrl(action,path,extra={}){
- const p=new URLSearchParams({access_token:HIKBOX.accessToken,action,path,share_id:HIKBOX.shareId,link_mode:'1',...extra});
+ const p=new URLSearchParams({
+  access_token:HIKBOX.accessToken,
+  action,path,
+  share_id:HIKBOX.shareId,
+  link_mode:'1',
+  ...extra
+ });
  return HIKBOX.apiBase+'?'+p.toString();
 }
-function cleanCode(value){return value.trim().replace(/^\/+|\/+$/g,'')}
-function isImage(name=''){return /\.(jpe?g|png|webp|gif|heic)$/i.test(name)}
-function getCode(){return cleanCode(new URLSearchParams(location.search).get('code')||'')}
 function openCode(){
  const code=cleanCode(codeInput.value);
  if(!code){entryError.textContent='Введіть код галереї.';entryError.hidden=false;codeInput.focus();return}
@@ -108,26 +102,33 @@ function openCode(){
 }
 async function loadGallery(code){
  entryView.hidden=true;galleryView.hidden=false;
- galleryTitle.textContent=code.replace(/[-_]+/g,' ');
+ galleryTitle.textContent=displayTitle(code);
  document.title=galleryTitle.textContent+' — Photo Zhive';
  const folder=HIKBOX.rootPath+'/'+code;
  try{
-   const r=await fetch(apiUrl('get_list',folder,{mode:'3',page:'1',pagesize:'500'}),{mode:'cors',cache:'no-store'});
-   const data=await r.json();
-   if(!r.ok||data.code)throw new Error(data.msg||('HTTP '+r.status));
-   const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
-   count.textContent=files.length?files.length+' фото':'';
-   status.hidden=true;
-   if(!files.length){status.hidden=false;status.textContent='У цій галереї поки немає фотографій.';return}
-   for(const f of files){
-     const full=folder+'/'+f.name;
-     const card=document.createElement('article');card.className='item';
-     const img=document.createElement('img');img.loading='lazy';img.alt=f.name;
-     img.src=apiUrl('get_thumbnail',full,{quality:'1'});
-     card.appendChild(img);card.onclick=()=>showPhoto(f.name,full);grid.appendChild(card);
-   }
+  const r=await fetch(apiUrl('get_list',folder,{mode:'3',page:'1',pagesize:'500'}),{mode:'cors',cache:'no-store'});
+  let data={}; try{data=await r.json()}catch(_){}
+  if(r.status===401 || r.status===403 || data.code===401 || data.code===403)throw new Error('TOKEN');
+  if(!r.ok||data.code)throw new Error(data.msg||('HTTP '+r.status));
+
+  const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
+  count.textContent=files.length?files.length+' фото':'';
+  status.hidden=true;
+  if(!files.length){status.hidden=false;status.textContent='У цій галереї поки немає фотографій.';return}
+
+  for(const f of files){
+   const full=folder+'/'+f.name;
+   const card=document.createElement('article'); card.className='item';
+   const img=document.createElement('img'); img.loading='lazy'; img.alt=f.name;
+   img.src=apiUrl('get_thumbnail',full,{quality:'1'});
+   card.appendChild(img); card.onclick=()=>showPhoto(f.name,full); grid.appendChild(card);
+  }
  }catch(e){
-   console.error(e);status.hidden=false;status.textContent='Не вдалося відкрити галерею. Перевірте код або спробуйте пізніше.';
+  console.error(e);
+  status.hidden=false;
+  status.textContent=e.message==='TOKEN'
+   ? 'Доступ до галереї тимчасово оновлюється. Спробуйте трохи пізніше.'
+   : 'Не вдалося відкрити галерею. Перевірте код або спробуйте пізніше.';
  }
 }
 function showPhoto(name,path){
@@ -135,10 +136,21 @@ function showPhoto(name,path){
  downloadBtn.href=apiUrl('download',path);overlay.classList.add('open');document.body.style.overflow='hidden';
 }
 function closeViewer(){overlay.classList.remove('open');viewer.src='';document.body.style.overflow=''}
+
 openBtn.onclick=openCode;codeInput.onkeydown=e=>{if(e.key==='Enter')openCode()};
 closeBtn.onclick=closeViewer;overlay.onclick=e=>{if(e.target===overlay)closeViewer()};
 document.onkeydown=e=>{if(e.key==='Escape')closeViewer()};
-const code=getCode(); if(code)loadGallery(code); else codeInput.focus();
+
+(async()=>{
+ try{
+  await loadConfig();
+  const code=getCode();
+  if(code) await loadGallery(code); else codeInput.focus();
+ }catch(e){
+  entryError.hidden=false;
+  entryError.textContent='Галерея тимчасово недоступна. Спробуйте пізніше.';
+ }
+})();
 </script>
 </body>
 </html>
