@@ -24,8 +24,14 @@ button:disabled{opacity:.55;cursor:default}.hint{margin:11px 2px 0;color:var(--m
 .back{height:42px;padding:0 17px;background:transparent;color:var(--text);border:1px solid var(--line)}
 .download-all{height:42px;padding:0 17px;gap:8px}.download-all svg{width:17px;height:17px}
 .grid{column-count:3;column-gap:14px;padding-bottom:16px}
-.item{position:relative;break-inside:avoid;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#ece8e1;cursor:zoom-in;min-height:120px}
-.item img{width:100%;height:auto;display:block;transition:transform .25s ease;min-height:120px;object-fit:cover}.item:hover img{transform:scale(1.015)}
+.item{position:relative;break-inside:avoid;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#e8e4dd;cursor:zoom-in;min-height:120px;isolation:isolate}
+.item::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,#e8e4dd 8%,#f2efe9 18%,#e8e4dd 33%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;z-index:0}
+.item.ready::before{opacity:0;animation:none;transition:opacity .25s ease;pointer-events:none}
+.item img{position:relative;z-index:1;width:100%;height:auto;display:block;min-height:120px;object-fit:cover;opacity:0;filter:blur(14px);transform:scale(1.025);transition:opacity .2s ease,filter .35s ease,transform .35s ease}
+.item.low-ready img{opacity:1}
+.item.hi-ready img{filter:blur(0);transform:scale(1)}
+.item.hi-ready:hover img{transform:scale(1.012)}
+@keyframes shimmer{to{background-position:-200% 0}}
 .item-download{position:absolute;right:10px;top:10px;width:38px;height:38px;border-radius:999px;background:rgba(255,255,255,.94);color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.12);z-index:2;text-decoration:none;opacity:0;transform:translateY(-3px);transition:.18s ease}
 .item:hover .item-download,.item-download:focus-visible{opacity:1;transform:none}.item-download svg{width:18px;height:18px}
 .loading{padding:24px 0;color:var(--muted)}.more-sentinel{height:1px;margin-bottom:60px}.bulk-progress{font-size:13px;color:var(--muted);min-height:20px;margin:4px 0 12px;text-align:right}
@@ -74,6 +80,8 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 <footer>Приватна онлайн-галерея · Photo Zhive</footer>
 </div>
 
+<iframe id="downloadFrame" name="downloadFrame" hidden title=""></iframe>
+
 <div class="overlay" id="overlay">
 <a class="download" id="downloadBtn" href="#" download>Завантажити оригінал</a>
 <button class="close" id="closeBtn" type="button">Закрити ✕</button>
@@ -90,12 +98,14 @@ let totalPages=1;
 let loadingPage=false;
 let allFiles=[];
 let currentViewerObjectUrl='';
+let currentCode='';
+let renderedCount=0;
 
 const $=id=>document.getElementById(id);
 const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),openBtn=$('openBtn'),
 entryError=$('entryError'),galleryTitle=$('galleryTitle'),count=$('count'),status=$('status'),grid=$('grid'),
 overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn'),viewerLoading=$('viewerLoading'),
-downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel');
+downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel'),downloadFrame=$('downloadFrame');
 
 function cleanCode(v){return v.trim().replace(/^\/+|\/+$/g,'')}
 function getCode(){return cleanCode(new URLSearchParams(location.search).get('code')||'')}
@@ -143,6 +153,25 @@ function makeDownloadIcon(path,name){
  return a;
 }
 
+const thumbObserver=new IntersectionObserver(entries=>{
+ for(const entry of entries){
+  if(!entry.isIntersecting)continue;
+  const img=entry.target;
+  thumbObserver.unobserve(img);
+  const hi=img.dataset.hi;
+  if(!hi||img.dataset.upgraded==='1')continue;
+  img.dataset.upgraded='1';
+  const preload=new Image();
+  preload.decoding='async';
+  preload.onload=()=>{
+   img.src=hi;
+   img.closest('.item')?.classList.add('hi-ready');
+  };
+  preload.onerror=()=>img.closest('.item')?.classList.add('hi-ready');
+  preload.src=hi;
+ }
+},{rootMargin:'1200px 0px'});
+
 function renderFiles(files){
  const frag=document.createDocumentFragment();
  for(const f of files){
@@ -150,19 +179,26 @@ function renderFiles(files){
   const card=document.createElement('article');
   card.className='item';
   const img=document.createElement('img');
-  img.loading='lazy';
+  const index=renderedCount++;
+  img.loading=index<18?'eager':'lazy';
+  if(index<12)img.fetchPriority='high';
   img.decoding='async';
   img.alt=f.name;
-  const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
-  img.src=thumbUrl;
+  const lowUrl=apiUrl('get_thumbnail',full,{quality:'3'});
+  const hiUrl=apiUrl('get_thumbnail',full,{quality:'1'});
+  img.dataset.hi=hiUrl;
+  img.addEventListener('load',()=>{
+   card.classList.add('low-ready','ready');
+  },{once:true});
+  img.src=lowUrl;
   card.appendChild(img);
   card.appendChild(makeDownloadIcon(full,f.name));
-  card.addEventListener('click',()=>showPhoto(f.name,full,thumbUrl));
+  card.addEventListener('click',()=>showPhoto(f.name,full,hiUrl));
   frag.appendChild(card);
+  thumbObserver.observe(img);
  }
  grid.appendChild(frag);
 }
-
 async function loadNextPage(){
  if(loadingPage || currentPage>=totalPages)return;
  loadingPage=true;
@@ -190,6 +226,7 @@ async function loadNextPage(){
 }
 
 async function loadGallery(code){
+ currentCode=code;
  entryView.hidden=true;galleryView.hidden=false;
  galleryTitle.textContent=displayTitle(code);
  document.title=galleryTitle.textContent+' — Photo Zhive';
@@ -226,70 +263,18 @@ function closeViewer(){
  if(currentViewerObjectUrl){URL.revokeObjectURL(currentViewerObjectUrl);currentViewerObjectUrl=''}
 }
 
-async function ensureAllFilesLoaded(){
- while(currentPage<totalPages){
-  const data=await fetchPage(currentPage+1);
-  totalPages=Math.max(1,Number(data.totalpage)||1);
-  currentPage+=1;
-  const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
-  allFiles.push(...files);
- }
- return allFiles;
-}
-
-function triggerBlobDownload(blob,name){
- const url=URL.createObjectURL(blob);
- const a=document.createElement('a');
- a.href=url;
- a.download=name;
- a.style.display='none';
- document.body.appendChild(a);
- a.click();
- a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1500);
-}
-
-async function downloadOne(file){
- const path=currentFolder+'/'+file.name;
- const r=await fetch(apiUrl('download',path),{mode:'cors',cache:'no-store'});
- if(!r.ok)throw new Error('HTTP '+r.status);
- const blob=await r.blob();
- triggerBlobDownload(blob,file.name);
-}
-
-async function downloadAll(){
+function downloadAll(){
+ if(!currentCode||!HIKBOX.zipBase)return;
+ const base=HIKBOX.zipBase.replace(/\/$/,'');
+ const zipUrl=base+'/'+encodeURIComponent(currentCode)+'.zip';
+ bulkProgress.textContent='Підготовка ZIP… Завантаження почнеться автоматично.';
  downloadAllBtn.disabled=true;
- bulkProgress.textContent='Підготовка списку фотографій…';
- try{
-  await ensureAllFilesLoaded();
-  const files=[...allFiles];
-  if(!files.length)return;
-
-  let done=0,failed=0,next=0;
-  const workers=Math.min(3,files.length);
-  bulkProgress.textContent=`Завантаження 0 із ${files.length}…`;
-
-  async function worker(){
-   while(true){
-    const i=next++;
-    if(i>=files.length)return;
-    try{await downloadOne(files[i])}catch(e){console.error('Download failed',files[i].name,e);failed++}
-    done++;
-    bulkProgress.textContent=`Завантаження ${done} із ${files.length}…${failed?` Не вдалося: ${failed}`:''}`;
-   }
-  }
-  await Promise.all(Array.from({length:workers},()=>worker()));
-  bulkProgress.textContent=failed
-   ? `Готово: ${files.length-failed} із ${files.length}. Не вдалося завантажити: ${failed}.`
-   : `Готово — ${files.length} фото завантажено.`;
- }catch(e){
-  console.error(e);
-  bulkProgress.textContent='Не вдалося завантажити всі фотографії. Спробуйте ще раз.';
- }finally{
+ downloadFrame.src=zipUrl+'?ts='+Date.now();
+ setTimeout(()=>{
+  bulkProgress.textContent='ZIP завантажується одним файлом.';
   downloadAllBtn.disabled=false;
- }
+ },1800);
 }
-
 const pageObserver=new IntersectionObserver(entries=>{
  if(entries.some(e=>e.isIntersecting))loadNextPage();
 },{rootMargin:'900px 0px'});
