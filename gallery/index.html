@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v4">
+<meta name="generator" content="Photo Zhive Gallery v4.2">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -24,11 +24,12 @@ button:disabled{opacity:.55;cursor:default}.hint{margin:11px 2px 0;color:var(--m
 .gallery-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.count{font-size:14px;color:var(--muted);margin-right:4px;display:inline-block;white-space:nowrap;flex:0 0 auto;min-width:max-content}
 .back{height:42px;padding:0 17px;background:transparent;color:var(--text);border:1px solid var(--line)}
 .download-all{height:42px;padding:0 17px;gap:8px}.download-all svg{width:17px;height:17px}
-.grid{column-count:3;column-gap:14px;padding-bottom:16px}
-.item{position:relative;break-inside:avoid;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#e8e4dd;cursor:zoom-in;min-height:120px;isolation:isolate}
+.grid{display:flex;gap:14px;padding-bottom:16px;align-items:flex-start}
+.masonry-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:14px}
+.item{position:relative;border-radius:12px;overflow:hidden;background:#e8e4dd;cursor:zoom-in;isolation:isolate}
 .item::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,#e8e4dd 8%,#f2efe9 18%,#e8e4dd 33%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;z-index:0}
 .item.ready::before{opacity:0;animation:none;transition:opacity .25s ease;pointer-events:none}
-.item img{position:relative;z-index:1;width:100%;height:auto;display:block;min-height:150px;object-fit:cover;opacity:0;transition:opacity .22s ease,transform .25s ease}
+.item img{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block;object-fit:cover;opacity:0;transition:opacity .22s ease,transform .25s ease}
 .item.img-ready img{opacity:1}
 .item.img-ready:hover img{transform:scale(1.012)}
 @keyframes shimmer{to{background-position:-200% 0}}
@@ -39,8 +40,8 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 .overlay{position:fixed;inset:0;z-index:20;background:rgba(12,12,12,.94);display:none;align-items:center;justify-content:center;padding:70px 22px 22px}
 .overlay.open{display:flex}.overlay img{max-width:94vw;max-height:86vh;object-fit:contain}.viewer-loading{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#111;border-radius:999px;padding:8px 13px;font-size:12px;display:none}.viewer-loading.show{display:block}
 .overlay .close,.overlay .download{position:fixed;top:18px;height:42px;background:#fff;color:#111}.overlay .close{right:18px}.overlay .download{left:18px}
-@media(max-width:850px){.grid{column-count:2}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:flex-start}.bulk-progress{text-align:left}}
-@media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{column-count:1}.gallery-title{font-size:42px}.item-download{opacity:1;transform:none}.gallery-actions{gap:8px}.download-all,.back{padding:0 14px}}
+@media(max-width:850px){.grid{gap:12px}.masonry-col{gap:12px}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:flex-start}.bulk-progress{text-align:left}}
+@media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{display:block}.masonry-col{display:block}.masonry-col:not(:first-child){display:none}.item{margin-bottom:12px;aspect-ratio:auto!important;min-height:150px}.item img{position:relative;height:auto;min-height:150px}.gallery-title{font-size:42px}.item-download{opacity:1;transform:none}.gallery-actions{gap:8px}.download-all,.back{padding:0 14px}}
 </style>
 </head>
 <body>
@@ -104,6 +105,9 @@ let currentCode='';
 let renderedCount=0;
 let thumbActive=0;
 const thumbQueue=[];
+let masonryCols=[];
+let masonryHeights=[];
+let masonryColumnCount=0;
 
 const $=id=>document.getElementById(id);
 const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),openBtn=$('openBtn'),
@@ -157,70 +161,118 @@ function makeDownloadIcon(path,name){
  return a;
 }
 
-function pumpThumbQueue(){
- while(thumbActive<THUMB_CONCURRENCY && thumbQueue.length){
-  const job=thumbQueue.shift();
-  if(job.img.dataset.started==='1')continue;
-  job.img.dataset.started='1';
-  thumbActive++;
+
+function desiredColumnCount(){
+ return window.matchMedia('(max-width:560px)').matches ? 1 :
+        window.matchMedia('(max-width:850px)').matches ? 2 : 3;
+}
+
+function ensureMasonryColumns(){
+ const wanted=desiredColumnCount();
+ if(masonryColumnCount===wanted && masonryCols.length===wanted)return;
+ masonryColumnCount=wanted;
+ masonryCols=[];
+ masonryHeights=Array(wanted).fill(0);
+ grid.innerHTML='';
+ for(let i=0;i<wanted;i++){
+  const col=document.createElement('div');
+  col.className='masonry-col';
+  col.dataset.col=String(i);
+  grid.appendChild(col);
+  masonryCols.push(col);
+ }
+}
+
+function shortestColumnIndex(){
+ let idx=0;
+ for(let i=1;i<masonryHeights.length;i++){
+  if(masonryHeights[i]<masonryHeights[idx])idx=i;
+ }
+ return idx;
+}
+
+function makeCard(file,full,thumbUrl,ratio){
+ const card=document.createElement('article');
+ card.className='item';
+ card.style.aspectRatio=String(ratio || 1.5);
+
+ const img=document.createElement('img');
+ img.decoding='async';
+ img.alt=file.name;
+ img.dataset.thumb=thumbUrl;
+
+ card.appendChild(img);
+ card.appendChild(makeDownloadIcon(full,file.name));
+ card.addEventListener('click',()=>showPhoto(file.name,full,thumbUrl));
+ return {card,img};
+}
+
+function placeCard(card,ratio){
+ ensureMasonryColumns();
+ if(masonryColumnCount===1){
+  masonryCols[0].appendChild(card);
+  masonryHeights[0]+=1;
+  return;
+ }
+ const idx=shortestColumnIndex();
+ masonryCols[idx].appendChild(card);
+ // Estimate vertical space as width-normalized height + gap.
+ masonryHeights[idx]+=1/Math.max(ratio,0.2)+0.035;
+}
+
+function loadThumbMeta(url){
+ return new Promise(resolve=>{
   const preload=new Image();
   preload.decoding='async';
   preload.onload=()=>{
-   job.img.src=job.url;
-   job.card.classList.add('img-ready','ready');
-   thumbActive--;
-   pumpThumbQueue();
+   const ratio=(preload.naturalWidth&&preload.naturalHeight)
+    ? preload.naturalWidth/preload.naturalHeight
+    : 1.5;
+   resolve({ok:true,ratio,src:preload.src});
   };
-  preload.onerror=()=>{
-   job.card.classList.add('ready');
-   thumbActive--;
-   pumpThumbQueue();
-  };
-  preload.src=job.url;
- }
+  preload.onerror=()=>resolve({ok:false,ratio:1.5,src:''});
+  preload.src=url;
+ });
 }
-function queueThumb(img,card,url,priority=false){
- if(img.dataset.queued==='1'||img.dataset.started==='1')return;
- img.dataset.queued='1';
- const job={img,card,url};
- if(priority)thumbQueue.unshift(job); else thumbQueue.push(job);
- pumpThumbQueue();
-}
-const thumbObserver=new IntersectionObserver(entries=>{
- for(const entry of entries){
-  if(!entry.isIntersecting)continue;
-  const card=entry.target;
-  thumbObserver.unobserve(card);
-  const img=card.querySelector('img');
-  if(img)queueThumb(img,card,img.dataset.thumb,false);
- }
-},{rootMargin:'450px 0px'});
 
-function renderFiles(files){
- const frag=document.createDocumentFragment();
- for(const f of files){
+async function renderBatch(batch){
+ // Preload the batch in parallel so the desktop layout is calculated
+ // before the cards are inserted. This prevents column reshuffling.
+ const prepared=await Promise.all(batch.map(async ({f,index})=>{
   const full=currentFolder+'/'+f.name;
-  const card=document.createElement('article');
-  card.className='item';
-  const img=document.createElement('img');
-  const index=renderedCount++;
-  img.decoding='async';
-  img.alt=f.name;
   const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
-  img.dataset.thumb=thumbUrl;
-  card.appendChild(img);
-  card.appendChild(makeDownloadIcon(full,f.name));
-  card.addEventListener('click',()=>showPhoto(f.name,full,thumbUrl));
-  frag.appendChild(card);
-  if(index<INITIAL_EAGER){
-   img.fetchPriority='high';
-   queueThumb(img,card,thumbUrl,true);
+  const meta=await loadThumbMeta(thumbUrl);
+  return {f,index,full,thumbUrl,meta};
+ }));
+
+ ensureMasonryColumns();
+
+ // Preserve source order while assigning each card to the shortest column.
+ for(const p of prepared){
+  const {card,img}=makeCard(p.f,p.full,p.thumbUrl,p.meta.ratio);
+  placeCard(card,p.meta.ratio);
+  if(p.meta.ok){
+   img.src=p.meta.src;
+   card.classList.add('img-ready','ready');
   }else{
-   thumbObserver.observe(card);
+   card.classList.add('ready');
   }
  }
- grid.appendChild(frag);
 }
+
+async function renderFiles(files){
+ const batchSize = masonryColumnCount===1 ? 6 : 12;
+ const jobs=files.map(f=>({f,index:renderedCount++}));
+
+ // On mobile keep the quick progressive feel with smaller batches.
+ // On desktop batches appear with final dimensions, so nothing moves later.
+ for(let i=0;i<jobs.length;i+=batchSize){
+  const slice=jobs.slice(i,i+batchSize);
+  await renderBatch(slice);
+  if(i===0) await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ }
+}
+
 async function loadNextPage(){
  if(loadingPage || currentPage>=totalPages)return;
  loadingPage=true;
@@ -231,7 +283,7 @@ async function loadNextPage(){
   currentPage=page;
   const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
   allFiles.push(...files);
-  renderFiles(files);
+  await renderFiles(files);
 
   const total=Number(data.count)||allFiles.length;
   count.textContent=total ? `${total} фото` : '';
@@ -250,6 +302,7 @@ async function loadNextPage(){
 
 async function loadGallery(code){
  currentCode=code;
+ ensureMasonryColumns();
  entryView.hidden=true;galleryView.hidden=false;
  galleryTitle.textContent=displayTitle(code);
  document.title=galleryTitle.textContent+' — Photo Zhive';
