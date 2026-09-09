@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v5">
+<meta name="generator" content="Photo Zhive Gallery v5.1">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -84,7 +84,7 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
       <span class="count" id="count"></span>
       <button class="download-all" id="downloadAllBtn" type="button" hidden aria-label="Завантажити всі оригінали">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
-        <span>Завантажити все</span>
+        <span>Завантажити всю галерею</span>
       </button>
       <a class="back" href="./">← До вибору галереї</a>
     </div>
@@ -124,7 +124,7 @@ const FIRST_BATCH=12;
 const DESKTOP_BATCH=18;
 const TABLET_BATCH=12;
 const MOBILE_BATCH=8;
-const PRELOAD_MARGIN=1100;
+const PRELOAD_MARGIN=650;
 
 let currentFolder='';
 let currentPage=0;
@@ -137,6 +137,7 @@ let renderingBatch=false;
 let pendingFiles=[];
 let renderedItems=[];
 let currentViewerObjectUrl='';
+let viewerFetchController=null;
 let resizeTimer=null;
 
 const $=id=>document.getElementById(id);
@@ -386,14 +387,10 @@ function sentinelNearViewport(){
 }
 
 async function fillAhead(){
- // Load just enough small batches to keep the next screen ready.
- // Do not drain the whole 500-file page in the background.
- let safety=0;
- while(hasMore() && sentinelNearViewport() && safety<3){
-  const before=renderedItems.length;
+ // One small batch per viewport trigger. This prevents a stationary page
+ // from draining the whole gallery in the background.
+ if(hasMore() && sentinelNearViewport()){
   await renderNextBatch();
-  if(renderedItems.length===before)break;
-  safety++;
  }
 }
 
@@ -414,6 +411,10 @@ async function loadGallery(code){
 }
 
 async function showPhoto(name,path,thumbUrl){
+ if(viewerFetchController)viewerFetchController.abort();
+ viewerFetchController=new AbortController();
+ const controller=viewerFetchController;
+
  viewer.alt=name;
  viewer.src=thumbUrl;
  downloadBtn.href=apiUrl('download',path);
@@ -423,20 +424,35 @@ async function showPhoto(name,path,thumbUrl){
  viewerLoading.classList.add('show');
 
  try{
-  const r=await fetch(apiUrl('download',path),{mode:'cors',cache:'no-store'});
+  const r=await fetch(apiUrl('download',path),{
+   mode:'cors',
+   cache:'no-store',
+   signal:controller.signal
+  });
   if(!r.ok)throw new Error('HTTP '+r.status);
   const blob=await r.blob();
+
+  // Ignore a completed request if another photo was opened meanwhile.
+  if(controller!==viewerFetchController)return;
+
   if(currentViewerObjectUrl)URL.revokeObjectURL(currentViewerObjectUrl);
   currentViewerObjectUrl=URL.createObjectURL(blob);
   viewer.src=currentViewerObjectUrl;
  }catch(e){
-  console.error('Original preview failed',e);
+  if(e.name!=='AbortError')console.error('Original preview failed',e);
  }finally{
-  viewerLoading.classList.remove('show');
+  if(controller===viewerFetchController){
+   viewerFetchController=null;
+   viewerLoading.classList.remove('show');
+  }
  }
 }
 
 function closeViewer(){
+ if(viewerFetchController){
+  viewerFetchController.abort();
+  viewerFetchController=null;
+ }
  overlay.classList.remove('open');
  viewer.src='';
  viewerLoading.classList.remove('show');
@@ -469,7 +485,7 @@ function downloadAll(){
  },1800);
 
  setTimeout(()=>{
-  setDownloadAllState('Завантажити все',false);
+  setDownloadAllState('Завантажити всю галерею',false);
   bulkProgress.textContent='';
  },7000);
 }
