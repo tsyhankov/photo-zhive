@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>HikBox API Test — Photo Zhive</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f5f1;color:#181818}
+main{max-width:760px;margin:60px auto;padding:0 20px}.card{background:#fff;border:1px solid #e5e1da;border-radius:18px;padding:28px}
+button{border:0;border-radius:999px;padding:12px 20px;background:#181818;color:#fff;font-weight:600;cursor:pointer}
+button:disabled{opacity:.55}pre{margin-top:22px;padding:18px;min-height:120px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:12px;background:#f1eee8}
+</style>
+</head>
+<body><main><div class="card">
+<h1>HikBox API Test</h1>
+<p>Тест прямого доступу з photo-zhive.com.ua до HikBox REST API.</p>
+<button id="testBtn">Test API</button>
+<pre id="output">Ready. Натисніть “Test API”.</pre>
+</div></main>
+<script>
+const cfg={
+ baseUrl:'https://217.24.165.253:20443/rest/1.1/share',
+ accessToken:'e94a9900aaf3c7e00605c7f90e43bade:1788950913',
+ shareId:'9UCYKO',
+ path:'/drives/disk_a1/Share/ext share'
+};
+const btn=document.getElementById('testBtn'), out=document.getElementById('output');
+btn.onclick=async()=>{
+ btn.disabled=true; out.textContent='Connecting to HikBox…';
+ const p=new URLSearchParams({
+  access_token:cfg.accessToken,action:'get_list',path:cfg.path,
+  share_id:cfg.shareId,link_mode:'1',mode:'3',page:'1',pagesize:'500'
+ });
+ try{
+  const r=await fetch(cfg.baseUrl+'?'+p,{mode:'cors',cache:'no-store'});
+  const t=await r.text(); let body=t;
+  try{body=JSON.stringify(JSON.parse(t),null,2)}catch(e){}
+  out.textContent=`HTTP ${r.status} ${r.statusText}\n\n${body}`;
+ }catch(e){
+  out.textContent=`BROWSER REQUEST FAILED\n\n${e.name}: ${e.message}\n\nOpen DevTools → Console for the exact TLS/CORS error.`;
+  console.error('HikBox API test failed:',e);
+ }finally{btn.disabled=false}
+};
+</script></body></html>
