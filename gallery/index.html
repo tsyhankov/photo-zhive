@@ -47,7 +47,7 @@ footer{padding-bottom:32px;color:var(--muted);font-size:13px}
   <div class="status" id="status">Відкриваю галерею…</div>
 
   <div class="codebox" id="codebox" hidden>
-    <input id="codeInput" type="text" placeholder="Наприклад: nastya-the-jaguar-story">
+    <input id="codeInput" type="text" placeholder="Наприклад: test1">
     <button id="openBtn" type="button">Відкрити</button>
   </div>
 
@@ -110,12 +110,6 @@ function goToCode(code) {
   location.href = `${location.pathname}?code=${encodeURIComponent(clean)}`;
 }
 
-async function loadGalleryMap() {
-  const r = await fetch('./galleries.json', { cache: 'no-store' });
-  if (!r.ok) throw new Error('Не вдалося завантажити galleries.json');
-  return r.json();
-}
-
 async function loadGallery(code) {
   el.grid.innerHTML = '';
   el.count.textContent = '';
@@ -125,22 +119,12 @@ async function loadGallery(code) {
   el.status.textContent = 'Завантаження галереї…';
 
   try {
-    const map = await loadGalleryMap();
-    const gallery = map[code];
+    // The URL code is the HikBox folder name.
+    // Example: ?code=test1 -> /ext share/test1
+    const folderPath = `${HIKBOX.rootPath}/${code}`;
+    el.title.textContent = code;
+    document.title = `${code} — Photo Zhive`;
 
-    if (!gallery) {
-      el.title.textContent = 'Gallery';
-      el.status.className = 'status error';
-      el.status.textContent = `Галерею з кодом "${code}" не знайдено.`;
-      el.codebox.hidden = false;
-      el.codeInput.value = code;
-      return;
-    }
-
-    el.title.textContent = gallery.title || code;
-    document.title = `${gallery.title || code} — Photo Zhive`;
-
-    const folderPath = `${HIKBOX.rootPath}/${gallery.folder}`;
     const listUrl = apiUrl('get_list', folderPath, {
       mode: '3',
       page: '1',
@@ -164,7 +148,6 @@ async function loadGallery(code) {
 
     for (const file of files) {
       const fullPath = `${folderPath}/${file.name}`;
-
       const card = document.createElement('article');
       card.className = 'item';
 
