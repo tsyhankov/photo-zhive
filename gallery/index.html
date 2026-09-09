@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v4.4">
+<meta name="generator" content="Photo Zhive Gallery v5">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -41,18 +41,20 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 .overlay.open{display:flex}.overlay img{max-width:94vw;max-height:86vh;object-fit:contain}.viewer-loading{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#111;border-radius:999px;padding:8px 13px;font-size:12px;display:none}.viewer-loading.show{display:block}
 .overlay .close,.overlay .download{position:fixed;top:18px;height:42px;background:#fff;color:#111}.overlay .close{right:18px}.overlay .download{left:18px}
 @media(max-width:850px){.grid{gap:12px}.masonry-col{gap:12px}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:flex-start}.bulk-progress{text-align:left}}
-@media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{display:block}.masonry-col{display:block}.masonry-col:not(:first-child){display:none}.item{margin-bottom:12px;aspect-ratio:auto!important;min-height:150px}.item img{position:relative;height:auto;min-height:150px}.gallery-title{font-size:42px}.item-download{opacity:1;transform:none}.gallery-actions{gap:8px}.download-all,.back{padding:0 14px}}
+@media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{gap:0}.masonry-col{gap:12px}.item{min-height:150px}.gallery-title{font-size:42px}.item-download{opacity:1;transform:none}.gallery-actions{gap:8px}.download-all,.back{padding:0 14px}}
 
 .gallery-loading-more{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  min-height:72px;margin:10px 0 4px;color:#777;font-size:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  min-height:112px;margin:8px 0 10px;color:#777;font-size:14px;text-align:center;
   transition:opacity .25s ease;
 }
 .gallery-loading-more[hidden]{display:none}
+.gallery-loading-line{display:flex;align-items:center;justify-content:center;gap:10px}
 .gallery-loading-more .spinner{
   width:18px;height:18px;border:2px solid #d9d5ce;border-top-color:#555;
   border-radius:50%;animation:gallerySpin .8s linear infinite;flex:0 0 auto;
 }
+.gallery-progress-count{font-size:12px;color:#96918a}
 @keyframes gallerySpin{to{transform:rotate(360deg)}}
 
 </style>
@@ -92,8 +94,11 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
   <section class="grid" id="grid"></section>
 
   <div class="gallery-loading-more" id="loadingMore" hidden aria-live="polite">
-    <span class="spinner" aria-hidden="true"></span>
-    <span id="loadingMoreText">Завантажуємо ще фото…</span>
+    <div class="gallery-loading-line">
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="loadingMoreText">Завантажуємо ще фото…</span>
+    </div>
+    <div class="gallery-progress-count" id="loadingProgressCount"></div>
   </div>
 
   <div class="more-sentinel" id="moreSentinel" aria-hidden="true"></div>
@@ -113,37 +118,37 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 
 <script>
 let HIKBOX=null;
+
 const PAGE_SIZE=500;
-const INITIAL_EAGER=12;
-const THUMB_CONCURRENCY=6;
+const FIRST_BATCH=12;
+const DESKTOP_BATCH=18;
+const TABLET_BATCH=12;
+const MOBILE_BATCH=8;
+const PRELOAD_MARGIN=1100;
+
 let currentFolder='';
 let currentPage=0;
 let totalPages=1;
-let loadingPage=false;
-let allFiles=[];
-let currentViewerObjectUrl='';
-let currentCode='';
-let renderedCount=0;
-let thumbActive=0;
-const thumbQueue=[];
-let masonryCols=[];
-let masonryHeights=[];
-let masonryColumnCount=0;
-const loadingMore=document.getElementById('loadingMore');
-const loadingMoreText=document.getElementById('loadingMoreText');
 let totalPhotoCount=0;
-function setLoadingMore(show,text='Завантажуємо ще фото…'){
- if(!loadingMore)return;
- loadingMore.hidden=!show;
- if(loadingMoreText)loadingMoreText.textContent=text;
-}
+let currentCode='';
+let loadingPage=false;
+let renderingBatch=false;
 
+let pendingFiles=[];
+let renderedItems=[];
+let currentViewerObjectUrl='';
+let resizeTimer=null;
 
 const $=id=>document.getElementById(id);
 const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),openBtn=$('openBtn'),
 entryError=$('entryError'),galleryTitle=$('galleryTitle'),count=$('count'),status=$('status'),grid=$('grid'),
 overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn'),viewerLoading=$('viewerLoading'),
-downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel'),downloadFrame=$('downloadFrame');
+downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel'),downloadFrame=$('downloadFrame'),
+loadingMore=$('loadingMore'),loadingMoreText=$('loadingMoreText'),loadingProgressCount=$('loadingProgressCount');
+
+let masonryCols=[];
+let masonryHeights=[];
+let masonryColumnCount=0;
 
 function cleanCode(v){return v.trim().replace(/^\/+|\/+$/g,'')}
 function getCode(){return cleanCode(new URLSearchParams(location.search).get('code')||'')}
@@ -155,6 +160,7 @@ async function loadConfig(){
  if(!r.ok)throw new Error('CONFIG');
  HIKBOX=await r.json();
 }
+
 function apiUrl(action,path,extra={}){
  const p=new URLSearchParams({
   access_token:HIKBOX.accessToken,
@@ -165,46 +171,45 @@ function apiUrl(action,path,extra={}){
  });
  return HIKBOX.apiBase+'?'+p.toString();
 }
+
 function openCode(){
  const code=cleanCode(codeInput.value);
- if(!code){entryError.textContent='Введіть код галереї.';entryError.hidden=false;codeInput.focus();return}
+ if(!code){
+  entryError.textContent='Введіть код галереї.';
+  entryError.hidden=false;
+  codeInput.focus();
+  return;
+ }
  location.href=location.pathname+'?code='+encodeURIComponent(code);
 }
 
 async function fetchPage(page){
- const r=await fetch(apiUrl('get_list',currentFolder,{mode:'3',page:String(page),pagesize:String(PAGE_SIZE)}),{mode:'cors',cache:'no-store'});
- let data={}; try{data=await r.json()}catch(_){ }
- if(r.status===401 || r.status===403 || data.code===401 || data.code===403)throw new Error('TOKEN');
+ const r=await fetch(apiUrl('get_list',currentFolder,{
+  mode:'3',page:String(page),pagesize:String(PAGE_SIZE)
+ }),{mode:'cors',cache:'no-store'});
+ let data={}; try{data=await r.json()}catch(_){}
+ if(r.status===401||r.status===403||data.code===401||data.code===403)throw new Error('TOKEN');
  if(!r.ok||data.code)throw new Error(data.msg||('HTTP '+r.status));
  return data;
 }
-
-function makeDownloadIcon(path,name){
- const a=document.createElement('a');
- a.className='item-download';
- a.href=apiUrl('download',path);
- a.download=name;
- a.title='Завантажити оригінал';
- a.setAttribute('aria-label','Завантажити оригінал '+name);
- a.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>';
- a.addEventListener('click',e=>e.stopPropagation());
- return a;
-}
-
 
 function desiredColumnCount(){
  return window.matchMedia('(max-width:560px)').matches ? 1 :
         window.matchMedia('(max-width:850px)').matches ? 2 : 3;
 }
 
-function ensureMasonryColumns(){
- const wanted=desiredColumnCount();
- if(masonryColumnCount===wanted && masonryCols.length===wanted)return;
- masonryColumnCount=wanted;
+function batchSize(){
+ if(masonryColumnCount<=1)return MOBILE_BATCH;
+ if(masonryColumnCount===2)return TABLET_BATCH;
+ return DESKTOP_BATCH;
+}
+
+function createColumns(countWanted){
+ masonryColumnCount=countWanted;
  masonryCols=[];
- masonryHeights=Array(wanted).fill(0);
+ masonryHeights=Array(countWanted).fill(0);
  grid.innerHTML='';
- for(let i=0;i<wanted;i++){
+ for(let i=0;i<countWanted;i++){
   const col=document.createElement('div');
   col.className='masonry-col';
   col.dataset.col=String(i);
@@ -221,125 +226,191 @@ function shortestColumnIndex(){
  return idx;
 }
 
-function makeCard(file,full,thumbUrl,ratio){
+function placeExistingCard(item){
+ const ratio=Math.max(item.ratio||1.5,.2);
+ const idx=masonryColumnCount===1?0:shortestColumnIndex();
+ masonryCols[idx].appendChild(item.card);
+ masonryHeights[idx]+=1/ratio+.035;
+}
+
+function rebuildMasonryIfNeeded(force=false){
+ const wanted=desiredColumnCount();
+ if(!force&&wanted===masonryColumnCount&&masonryCols.length===wanted)return;
+ createColumns(wanted);
+ for(const item of renderedItems)placeExistingCard(item);
+}
+
+function makeDownloadIcon(path,name){
+ const a=document.createElement('a');
+ a.className='item-download';
+ a.href=apiUrl('download',path);
+ a.download=name;
+ a.title='Завантажити оригінал';
+ a.setAttribute('aria-label','Завантажити оригінал '+name);
+ a.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>';
+ a.addEventListener('click',e=>e.stopPropagation());
+ return a;
+}
+
+function makeCard(file,full,thumbUrl,ratio,src){
  const card=document.createElement('article');
- card.className='item';
- card.style.aspectRatio=String(ratio || 1.5);
+ card.className='item ready img-ready';
+ card.style.aspectRatio=String(ratio||1.5);
 
  const img=document.createElement('img');
  img.decoding='async';
  img.alt=file.name;
- img.dataset.thumb=thumbUrl;
+ img.src=src;
 
  card.appendChild(img);
  card.appendChild(makeDownloadIcon(full,file.name));
  card.addEventListener('click',()=>showPhoto(file.name,full,thumbUrl));
- return {card,img};
+ return card;
 }
 
-function placeCard(card,ratio){
- ensureMasonryColumns();
- if(masonryColumnCount===1){
-  masonryCols[0].appendChild(card);
-  masonryHeights[0]+=1;
-  return;
- }
- const idx=shortestColumnIndex();
- masonryCols[idx].appendChild(card);
- // Estimate vertical space as width-normalized height + gap.
- masonryHeights[idx]+=1/Math.max(ratio,0.2)+0.035;
-}
-
-function loadThumbMeta(url){
+function loadThumbMeta(file){
+ const full=currentFolder+'/'+file.name;
+ const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
  return new Promise(resolve=>{
   const preload=new Image();
   preload.decoding='async';
   preload.onload=()=>{
    const ratio=(preload.naturalWidth&&preload.naturalHeight)
-    ? preload.naturalWidth/preload.naturalHeight
-    : 1.5;
-   resolve({ok:true,ratio,src:preload.src});
+    ? preload.naturalWidth/preload.naturalHeight : 1.5;
+   resolve({file,full,thumbUrl,ratio,src:preload.src,ok:true});
   };
-  preload.onerror=()=>resolve({ok:false,ratio:1.5,src:''});
-  preload.src=url;
+  preload.onerror=()=>resolve({file,full,thumbUrl,ratio:1.5,src:'',ok:false});
+  preload.src=thumbUrl;
  });
 }
 
-async function renderBatch(batch){
- // Preload the batch in parallel so the desktop layout is calculated
- // before the cards are inserted. This prevents column reshuffling.
- const prepared=await Promise.all(batch.map(async ({f,index})=>{
-  const full=currentFolder+'/'+f.name;
-  const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
-  const meta=await loadThumbMeta(thumbUrl);
-  return {f,index,full,thumbUrl,meta};
- }));
+function hasMore(){
+ return pendingFiles.length>0 || currentPage<totalPages;
+}
 
- ensureMasonryColumns();
+function updateProgress(isLoading=false){
+ const shown=renderedItems.length;
+ const total=Math.max(totalPhotoCount,shown);
+ count.textContent=total?`${total} фото`:'';
+ count.title=count.textContent;
 
- // Preserve source order while assigning each card to the shortest column.
- for(const p of prepared){
-  const {card,img}=makeCard(p.f,p.full,p.thumbUrl,p.meta.ratio);
-  placeCard(card,p.meta.ratio);
-  if(p.meta.ok){
-   img.src=p.meta.src;
-   card.classList.add('img-ready','ready');
-  }else{
-   card.classList.add('ready');
-  }
+ if(!total){
+  loadingMore.hidden=true;
+  return;
+ }
+
+ if(hasMore()||isLoading){
+  loadingMore.hidden=false;
+  loadingMoreText.textContent=isLoading?'Завантажуємо ще фотографії…':'Ще фотографії нижче';
+  loadingProgressCount.textContent=`${shown} із ${total}`;
+ }else{
+  loadingMore.hidden=true;
  }
 }
 
-async function renderFiles(files){
- if(files.length)setLoadingMore(true);
- const batchSize = masonryColumnCount===1 ? 6 : 12;
- const jobs=files.map(f=>({f,index:renderedCount++}));
+async function ensurePendingFiles(){
+ if(pendingFiles.length||currentPage>=totalPages)return;
+ if(loadingPage)return;
 
- // On mobile keep the quick progressive feel with smaller batches.
- // On desktop batches appear with final dimensions, so nothing moves later.
- for(let i=0;i<jobs.length;i+=batchSize){
-  const slice=jobs.slice(i,i+batchSize);
-  await renderBatch(slice);
-  if(i===0) await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
- }
- setLoadingMore(false);
-}
-
-async function loadNextPage(){
- if(loadingPage || currentPage>=totalPages)return;
  loadingPage=true;
+ updateProgress(true);
  try{
-  const page=currentPage+1;
-  const data=await fetchPage(page);
+  const next=currentPage+1;
+  const data=await fetchPage(next);
   totalPages=Math.max(1,Number(data.totalpage)||1);
-  currentPage=page;
-  const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
-  allFiles.push(...files);
-  await renderFiles(files);
+  currentPage=next;
 
-  const total=Number(data.count)||allFiles.length;
-  count.textContent=total ? `${total} фото` : '';
-  count.title=count.textContent;
-  downloadAllBtn.hidden=!total;
+  const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
+  pendingFiles.push(...files);
+
+  // HikBox count is the total number of entries in the share page/list.
+  // For galleries containing only photos this is the exact gallery count.
+  const apiTotal=Number(data.count)||0;
+  if(apiTotal)totalPhotoCount=Math.max(totalPhotoCount,apiTotal);
+  else totalPhotoCount=Math.max(totalPhotoCount,renderedItems.length+pendingFiles.length);
+
+  downloadAllBtn.hidden=!totalPhotoCount;
   status.hidden=true;
-  if(!allFiles.length && currentPage>=totalPages){status.hidden=false;status.textContent='У цій галереї поки немає фотографій.'}
+ }finally{
+  loadingPage=false;
+  updateProgress(false);
+ }
+}
+
+async function renderNextBatch(sizeOverride=null){
+ if(renderingBatch)return;
+ renderingBatch=true;
+ updateProgress(true);
+
+ try{
+  await ensurePendingFiles();
+  if(!pendingFiles.length){
+   if(!renderedItems.length&&currentPage>=totalPages){
+    status.hidden=false;
+    status.textContent='У цій галереї поки немає фотографій.';
+   }
+   return;
+  }
+
+  rebuildMasonryIfNeeded();
+
+  const amount=sizeOverride||batchSize();
+  const files=pendingFiles.splice(0,amount);
+
+  // Only this small batch reaches HikBox. The remaining 100/500 files
+  // stay as metadata until the user approaches the bottom of the gallery.
+  const prepared=await Promise.all(files.map(loadThumbMeta));
+
+  for(const p of prepared){
+   if(!p.ok)continue;
+   const card=makeCard(p.file,p.full,p.thumbUrl,p.ratio,p.src);
+   const item={card,ratio:p.ratio,file:p.file,full:p.full,thumbUrl:p.thumbUrl};
+   renderedItems.push(item);
+   placeExistingCard(item);
+  }
  }catch(e){
   console.error(e);
   status.hidden=false;
   status.textContent=e.message==='TOKEN'
    ? 'Доступ до галереї тимчасово оновлюється. Спробуйте трохи пізніше.'
    : 'Не вдалося відкрити галерею. Перевірте код або спробуйте пізніше.';
- }finally{loadingPage=false}
+ }finally{
+  renderingBatch=false;
+  updateProgress(false);
+ }
+}
+
+function sentinelNearViewport(){
+ const r=moreSentinel.getBoundingClientRect();
+ return r.top < window.innerHeight+PRELOAD_MARGIN;
+}
+
+async function fillAhead(){
+ // Load just enough small batches to keep the next screen ready.
+ // Do not drain the whole 500-file page in the background.
+ let safety=0;
+ while(hasMore() && sentinelNearViewport() && safety<3){
+  const before=renderedItems.length;
+  await renderNextBatch();
+  if(renderedItems.length===before)break;
+  safety++;
+ }
 }
 
 async function loadGallery(code){
  currentCode=code;
- ensureMasonryColumns();
- entryView.hidden=true;galleryView.hidden=false;
+ entryView.hidden=true;
+ galleryView.hidden=false;
  galleryTitle.textContent=displayTitle(code);
  document.title=galleryTitle.textContent+' — Photo Zhive';
  currentFolder=HIKBOX.rootPath+'/'+code;
- await loadNextPage();
+
+ rebuildMasonryIfNeeded(true);
+ await ensurePendingFiles();
+
+ // First screen appears quickly; subsequent batches are viewport-driven.
+ await renderNextBatch(FIRST_BATCH);
+ requestAnimationFrame(()=>fillAhead());
 }
 
 async function showPhoto(name,path,thumbUrl){
@@ -350,6 +421,7 @@ async function showPhoto(name,path,thumbUrl){
  overlay.classList.add('open');
  document.body.style.overflow='hidden';
  viewerLoading.classList.add('show');
+
  try{
   const r=await fetch(apiUrl('download',path),{mode:'cors',cache:'no-store'});
   if(!r.ok)throw new Error('HTTP '+r.status);
@@ -363,30 +435,68 @@ async function showPhoto(name,path,thumbUrl){
   viewerLoading.classList.remove('show');
  }
 }
+
 function closeViewer(){
  overlay.classList.remove('open');
  viewer.src='';
  viewerLoading.classList.remove('show');
  document.body.style.overflow='';
- if(currentViewerObjectUrl){URL.revokeObjectURL(currentViewerObjectUrl);currentViewerObjectUrl=''}
+ if(currentViewerObjectUrl){
+  URL.revokeObjectURL(currentViewerObjectUrl);
+  currentViewerObjectUrl='';
+ }
+}
+
+function setDownloadAllState(label,disabled){
+ const span=downloadAllBtn.querySelector('span');
+ if(span)span.textContent=label;
+ downloadAllBtn.disabled=disabled;
 }
 
 function downloadAll(){
- if(!currentCode||!HIKBOX.zipBase)return;
+ if(!currentCode||!HIKBOX.zipBase||downloadAllBtn.disabled)return;
+
  const base=HIKBOX.zipBase.replace(/\/$/,'');
  const zipUrl=base+'/'+encodeURIComponent(currentCode)+'.zip';
- bulkProgress.textContent='Підготовка ZIP… Завантаження почнеться автоматично.';
- downloadAllBtn.disabled=true;
+
+ setDownloadAllState('Готуємо ZIP…',true);
+ bulkProgress.textContent='Готуємо архів. Завантаження почнеться автоматично.';
  downloadFrame.src=zipUrl+'?ts='+Date.now();
+
  setTimeout(()=>{
+  setDownloadAllState('Завантаження почалося',true);
   bulkProgress.textContent='ZIP завантажується одним файлом.';
-  downloadAllBtn.disabled=false;
  },1800);
+
+ setTimeout(()=>{
+  setDownloadAllState('Завантажити все',false);
+  bulkProgress.textContent='';
+ },7000);
 }
-const pageObserver=new IntersectionObserver(entries=>{
- if(entries.some(e=>e.isIntersecting))loadNextPage();
-},{rootMargin:'900px 0px'});
-pageObserver.observe(moreSentinel);
+
+const viewportObserver=new IntersectionObserver(entries=>{
+ if(entries.some(e=>e.isIntersecting))fillAhead();
+},{rootMargin:`${PRELOAD_MARGIN}px 0px`});
+viewportObserver.observe(moreSentinel);
+
+window.addEventListener('resize',()=>{
+ clearTimeout(resizeTimer);
+ resizeTimer=setTimeout(()=>{
+  const old=masonryColumnCount;
+  const wanted=desiredColumnCount();
+  if(old!==wanted){
+   rebuildMasonryIfNeeded(true);
+   requestAnimationFrame(()=>fillAhead());
+  }
+ },180);
+});
+
+window.addEventListener('orientationchange',()=>{
+ setTimeout(()=>{
+  rebuildMasonryIfNeeded(true);
+  fillAhead();
+ },250);
+});
 
 openBtn.onclick=openCode;
 codeInput.onkeydown=e=>{if(e.key==='Enter')openCode()};
@@ -399,8 +509,10 @@ document.onkeydown=e=>{if(e.key==='Escape')closeViewer()};
  try{
   await loadConfig();
   const code=getCode();
-  if(code) await loadGallery(code); else codeInput.focus();
+  if(code)await loadGallery(code);
+  else codeInput.focus();
  }catch(e){
+  console.error(e);
   entryError.hidden=false;
   entryError.textContent='Галерея тимчасово недоступна. Спробуйте пізніше.';
  }
