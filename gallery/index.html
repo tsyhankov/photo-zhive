@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v4.3">
+<meta name="generator" content="Photo Zhive Gallery v4.4">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -42,6 +42,19 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 .overlay .close,.overlay .download{position:fixed;top:18px;height:42px;background:#fff;color:#111}.overlay .close{right:18px}.overlay .download{left:18px}
 @media(max-width:850px){.grid{gap:12px}.masonry-col{gap:12px}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:flex-start}.bulk-progress{text-align:left}}
 @media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{display:block}.masonry-col{display:block}.masonry-col:not(:first-child){display:none}.item{margin-bottom:12px;aspect-ratio:auto!important;min-height:150px}.item img{position:relative;height:auto;min-height:150px}.gallery-title{font-size:42px}.item-download{opacity:1;transform:none}.gallery-actions{gap:8px}.download-all,.back{padding:0 14px}}
+
+.gallery-loading-more{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:72px;margin:10px 0 4px;color:#777;font-size:14px;
+  transition:opacity .25s ease;
+}
+.gallery-loading-more[hidden]{display:none}
+.gallery-loading-more .spinner{
+  width:18px;height:18px;border:2px solid #d9d5ce;border-top-color:#555;
+  border-radius:50%;animation:gallerySpin .8s linear infinite;flex:0 0 auto;
+}
+@keyframes gallerySpin{to{transform:rotate(360deg)}}
+
 </style>
   <link rel="icon" type="image/png" href="../Images/favicon.png">
   <link rel="apple-touch-icon" href="../Images/favicon.png">
@@ -77,6 +90,12 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
   <div class="bulk-progress" id="bulkProgress"></div>
   <div class="loading" id="status">Завантаження фотографій…</div>
   <section class="grid" id="grid"></section>
+
+  <div class="gallery-loading-more" id="loadingMore" hidden aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <span id="loadingMoreText">Завантажуємо ще фото…</span>
+  </div>
+
   <div class="more-sentinel" id="moreSentinel" aria-hidden="true"></div>
 </main>
 
@@ -110,6 +129,15 @@ const thumbQueue=[];
 let masonryCols=[];
 let masonryHeights=[];
 let masonryColumnCount=0;
+const loadingMore=document.getElementById('loadingMore');
+const loadingMoreText=document.getElementById('loadingMoreText');
+let totalPhotoCount=0;
+function setLoadingMore(show,text='Завантажуємо ще фото…'){
+ if(!loadingMore)return;
+ loadingMore.hidden=!show;
+ if(loadingMoreText)loadingMoreText.textContent=text;
+}
+
 
 const $=id=>document.getElementById(id);
 const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),openBtn=$('openBtn'),
@@ -263,6 +291,7 @@ async function renderBatch(batch){
 }
 
 async function renderFiles(files){
+ if(files.length)setLoadingMore(true);
  const batchSize = masonryColumnCount===1 ? 6 : 12;
  const jobs=files.map(f=>({f,index:renderedCount++}));
 
@@ -273,6 +302,7 @@ async function renderFiles(files){
   await renderBatch(slice);
   if(i===0) await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
  }
+ setLoadingMore(false);
 }
 
 async function loadNextPage(){
