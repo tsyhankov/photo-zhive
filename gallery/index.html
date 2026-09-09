@@ -16,22 +16,25 @@ h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,5vw,66px);fo
 .entry{max-width:650px;margin-top:32px}.entry-row{display:flex;gap:10px}
 input{width:100%;height:52px;padding:0 18px;border:1px solid var(--line);border-radius:14px;background:var(--white);font:inherit;font-size:16px;outline:none}
 input:focus{border-color:#888}
-button,.back,.download{border:0;background:#171717;color:#fff;border-radius:999px;padding:0 22px;height:52px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-.hint{margin:11px 2px 0;color:var(--muted);font-size:13px}.error{margin-top:16px;color:#8c2626;font-size:14px}
+button,.back,.download,.download-all{border:0;background:#171717;color:#fff;border-radius:999px;padding:0 22px;height:52px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+button:disabled{opacity:.55;cursor:default}.hint{margin:11px 2px 0;color:var(--muted);font-size:13px}.error{margin-top:16px;color:#8c2626;font-size:14px}
 .gallery-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:36px 0 28px}
 .gallery-title{margin:8px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,5vw,62px);font-weight:400;line-height:1.05;text-transform:none}
-.gallery-actions{display:flex;align-items:center;gap:16px}.count{font-size:14px;color:var(--muted)}
+.gallery-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.count{font-size:14px;color:var(--muted);margin-right:4px}
 .back{height:42px;padding:0 17px;background:transparent;color:var(--text);border:1px solid var(--line)}
-.grid{column-count:3;column-gap:14px;padding-bottom:60px}
-.item{break-inside:avoid;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#ece8e1;cursor:zoom-in}
-.item img{width:100%;height:auto;display:block;transition:transform .25s ease}.item:hover img{transform:scale(1.015)}
-.loading{padding:24px 0;color:var(--muted)}
+.download-all{height:42px;padding:0 17px;gap:8px}.download-all svg{width:17px;height:17px}
+.grid{column-count:3;column-gap:14px;padding-bottom:16px}
+.item{position:relative;break-inside:avoid;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#ece8e1;cursor:zoom-in;min-height:120px}
+.item img{width:100%;height:auto;display:block;transition:transform .25s ease;min-height:120px;object-fit:cover}.item:hover img{transform:scale(1.015)}
+.item-download{position:absolute;right:10px;top:10px;width:38px;height:38px;border-radius:999px;background:rgba(255,255,255,.94);color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.12);z-index:2;text-decoration:none;opacity:0;transform:translateY(-3px);transition:.18s ease}
+.item:hover .item-download,.item-download:focus-visible{opacity:1;transform:none}.item-download svg{width:18px;height:18px}
+.loading{padding:24px 0;color:var(--muted)}.more-sentinel{height:1px;margin-bottom:60px}.bulk-progress{font-size:13px;color:var(--muted);min-height:20px;margin:4px 0 12px;text-align:right}
 footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);font-size:13px}
 .overlay{position:fixed;inset:0;z-index:20;background:rgba(12,12,12,.94);display:none;align-items:center;justify-content:center;padding:70px 22px 22px}
-.overlay.open{display:flex}.overlay img{max-width:94vw;max-height:86vh;object-fit:contain}
+.overlay.open{display:flex}.overlay img{max-width:94vw;max-height:86vh;object-fit:contain}.viewer-loading{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#111;border-radius:999px;padding:8px 13px;font-size:12px;display:none}.viewer-loading.show{display:block}
 .overlay .close,.overlay .download{position:fixed;top:18px;height:42px;background:#fff;color:#111}.overlay .close{right:18px}.overlay .download{left:18px}
-@media(max-width:850px){.grid{column-count:2}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:space-between}}
-@media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{column-count:1}.gallery-title{font-size:42px}}
+@media(max-width:850px){.grid{column-count:2}.gallery-head{align-items:flex-start;flex-direction:column}.gallery-actions{width:100%;justify-content:flex-start}.bulk-progress{text-align:left}}
+@media(max-width:560px){.wrap{width:min(100% - 28px,1120px)}header{padding-top:28px}.entry-row{flex-direction:column}.entry-row button{width:100%}.grid{column-count:1}.gallery-title{font-size:42px}.item-download{opacity:1;transform:none}.gallery-actions{gap:8px}.download-all,.back{padding:0 14px}}
 </style>
 </head>
 <body>
@@ -53,27 +56,46 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 <main id="galleryView" hidden>
   <div class="gallery-head">
     <div><div class="brand">Photo Zhive</div><h1 class="gallery-title" id="galleryTitle">Галерея</h1></div>
-    <div class="gallery-actions"><span class="count" id="count"></span><a class="back" href="./">← До вибору галереї</a></div>
+    <div class="gallery-actions">
+      <span class="count" id="count"></span>
+      <button class="download-all" id="downloadAllBtn" type="button" hidden aria-label="Завантажити всі оригінали">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        <span>Завантажити все</span>
+      </button>
+      <a class="back" href="./">← До вибору галереї</a>
+    </div>
   </div>
+  <div class="bulk-progress" id="bulkProgress"></div>
   <div class="loading" id="status">Завантаження фотографій…</div>
   <section class="grid" id="grid"></section>
+  <div class="more-sentinel" id="moreSentinel" aria-hidden="true"></div>
 </main>
 
 <footer>Приватна онлайн-галерея · Photo Zhive</footer>
 </div>
 
 <div class="overlay" id="overlay">
-<a class="download" id="downloadBtn" href="#" target="_blank" rel="noopener">Завантажити оригінал</a>
+<a class="download" id="downloadBtn" href="#" download>Завантажити оригінал</a>
 <button class="close" id="closeBtn" type="button">Закрити ✕</button>
 <img id="viewer" alt="">
+<div class="viewer-loading" id="viewerLoading">Завантаження оригіналу…</div>
 </div>
 
 <script>
 let HIKBOX=null;
+const PAGE_SIZE=100;
+let currentFolder='';
+let currentPage=0;
+let totalPages=1;
+let loadingPage=false;
+let allFiles=[];
+let currentViewerObjectUrl='';
+
 const $=id=>document.getElementById(id);
 const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInput'),openBtn=$('openBtn'),
 entryError=$('entryError'),galleryTitle=$('galleryTitle'),count=$('count'),status=$('status'),grid=$('grid'),
-overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn');
+overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn'),viewerLoading=$('viewerLoading'),
+downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel');
 
 function cleanCode(v){return v.trim().replace(/^\/+|\/+$/g,'')}
 function getCode(){return cleanCode(new URLSearchParams(location.search).get('code')||'')}
@@ -100,45 +122,184 @@ function openCode(){
  if(!code){entryError.textContent='Введіть код галереї.';entryError.hidden=false;codeInput.focus();return}
  location.href=location.pathname+'?code='+encodeURIComponent(code);
 }
-async function loadGallery(code){
- entryView.hidden=true;galleryView.hidden=false;
- galleryTitle.textContent=displayTitle(code);
- document.title=galleryTitle.textContent+' — Photo Zhive';
- const folder=HIKBOX.rootPath+'/'+code;
+
+async function fetchPage(page){
+ const r=await fetch(apiUrl('get_list',currentFolder,{mode:'3',page:String(page),pagesize:String(PAGE_SIZE)}),{mode:'cors',cache:'no-store'});
+ let data={}; try{data=await r.json()}catch(_){ }
+ if(r.status===401 || r.status===403 || data.code===401 || data.code===403)throw new Error('TOKEN');
+ if(!r.ok||data.code)throw new Error(data.msg||('HTTP '+r.status));
+ return data;
+}
+
+function makeDownloadIcon(path,name){
+ const a=document.createElement('a');
+ a.className='item-download';
+ a.href=apiUrl('download',path);
+ a.download=name;
+ a.title='Завантажити оригінал';
+ a.setAttribute('aria-label','Завантажити оригінал '+name);
+ a.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>';
+ a.addEventListener('click',e=>e.stopPropagation());
+ return a;
+}
+
+function renderFiles(files){
+ const frag=document.createDocumentFragment();
+ for(const f of files){
+  const full=currentFolder+'/'+f.name;
+  const card=document.createElement('article');
+  card.className='item';
+  const img=document.createElement('img');
+  img.loading='lazy';
+  img.decoding='async';
+  img.alt=f.name;
+  const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
+  img.src=thumbUrl;
+  card.appendChild(img);
+  card.appendChild(makeDownloadIcon(full,f.name));
+  card.addEventListener('click',()=>showPhoto(f.name,full,thumbUrl));
+  frag.appendChild(card);
+ }
+ grid.appendChild(frag);
+}
+
+async function loadNextPage(){
+ if(loadingPage || currentPage>=totalPages)return;
+ loadingPage=true;
  try{
-  const r=await fetch(apiUrl('get_list',folder,{mode:'3',page:'1',pagesize:'500'}),{mode:'cors',cache:'no-store'});
-  let data={}; try{data=await r.json()}catch(_){}
-  if(r.status===401 || r.status===403 || data.code===401 || data.code===403)throw new Error('TOKEN');
-  if(!r.ok||data.code)throw new Error(data.msg||('HTTP '+r.status));
-
+  const page=currentPage+1;
+  const data=await fetchPage(page);
+  totalPages=Math.max(1,Number(data.totalpage)||1);
+  currentPage=page;
   const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
-  count.textContent=files.length?files.length+' фото':'';
-  status.hidden=true;
-  if(!files.length){status.hidden=false;status.textContent='У цій галереї поки немає фотографій.';return}
+  allFiles.push(...files);
+  renderFiles(files);
 
-  for(const f of files){
-   const full=folder+'/'+f.name;
-   const card=document.createElement('article'); card.className='item';
-   const img=document.createElement('img'); img.loading='lazy'; img.alt=f.name;
-   img.src=apiUrl('get_thumbnail',full,{quality:'1'});
-   card.appendChild(img); card.onclick=()=>showPhoto(f.name,full); grid.appendChild(card);
-  }
+  const total=Number(data.count)||allFiles.length;
+  count.textContent=total?total+' фото':'';
+  downloadAllBtn.hidden=!total;
+  status.hidden=true;
+  if(!allFiles.length && currentPage>=totalPages){status.hidden=false;status.textContent='У цій галереї поки немає фотографій.'}
  }catch(e){
   console.error(e);
   status.hidden=false;
   status.textContent=e.message==='TOKEN'
    ? 'Доступ до галереї тимчасово оновлюється. Спробуйте трохи пізніше.'
    : 'Не вдалося відкрити галерею. Перевірте код або спробуйте пізніше.';
+ }finally{loadingPage=false}
+}
+
+async function loadGallery(code){
+ entryView.hidden=true;galleryView.hidden=false;
+ galleryTitle.textContent=displayTitle(code);
+ document.title=galleryTitle.textContent+' — Photo Zhive';
+ currentFolder=HIKBOX.rootPath+'/'+code;
+ await loadNextPage();
+}
+
+async function showPhoto(name,path,thumbUrl){
+ viewer.alt=name;
+ viewer.src=thumbUrl;
+ downloadBtn.href=apiUrl('download',path);
+ downloadBtn.setAttribute('download',name);
+ overlay.classList.add('open');
+ document.body.style.overflow='hidden';
+ viewerLoading.classList.add('show');
+ try{
+  const r=await fetch(apiUrl('download',path),{mode:'cors',cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const blob=await r.blob();
+  if(currentViewerObjectUrl)URL.revokeObjectURL(currentViewerObjectUrl);
+  currentViewerObjectUrl=URL.createObjectURL(blob);
+  viewer.src=currentViewerObjectUrl;
+ }catch(e){
+  console.error('Original preview failed',e);
+ }finally{
+  viewerLoading.classList.remove('show');
  }
 }
-function showPhoto(name,path){
- viewer.alt=name;viewer.src=apiUrl('get_thumbnail',path,{quality:'3'});
- downloadBtn.href=apiUrl('download',path);overlay.classList.add('open');document.body.style.overflow='hidden';
+function closeViewer(){
+ overlay.classList.remove('open');
+ viewer.src='';
+ viewerLoading.classList.remove('show');
+ document.body.style.overflow='';
+ if(currentViewerObjectUrl){URL.revokeObjectURL(currentViewerObjectUrl);currentViewerObjectUrl=''}
 }
-function closeViewer(){overlay.classList.remove('open');viewer.src='';document.body.style.overflow=''}
 
-openBtn.onclick=openCode;codeInput.onkeydown=e=>{if(e.key==='Enter')openCode()};
-closeBtn.onclick=closeViewer;overlay.onclick=e=>{if(e.target===overlay)closeViewer()};
+async function ensureAllFilesLoaded(){
+ while(currentPage<totalPages){
+  const data=await fetchPage(currentPage+1);
+  totalPages=Math.max(1,Number(data.totalpage)||1);
+  currentPage+=1;
+  const files=(data.list||[]).filter(x=>!x.isdir&&isImage(x.name));
+  allFiles.push(...files);
+ }
+ return allFiles;
+}
+
+function triggerBlobDownload(blob,name){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=name;
+ a.style.display='none';
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+async function downloadOne(file){
+ const path=currentFolder+'/'+file.name;
+ const r=await fetch(apiUrl('download',path),{mode:'cors',cache:'no-store'});
+ if(!r.ok)throw new Error('HTTP '+r.status);
+ const blob=await r.blob();
+ triggerBlobDownload(blob,file.name);
+}
+
+async function downloadAll(){
+ downloadAllBtn.disabled=true;
+ bulkProgress.textContent='Підготовка списку фотографій…';
+ try{
+  await ensureAllFilesLoaded();
+  const files=[...allFiles];
+  if(!files.length)return;
+
+  let done=0,failed=0,next=0;
+  const workers=Math.min(3,files.length);
+  bulkProgress.textContent=`Завантаження 0 із ${files.length}…`;
+
+  async function worker(){
+   while(true){
+    const i=next++;
+    if(i>=files.length)return;
+    try{await downloadOne(files[i])}catch(e){console.error('Download failed',files[i].name,e);failed++}
+    done++;
+    bulkProgress.textContent=`Завантаження ${done} із ${files.length}…${failed?` Не вдалося: ${failed}`:''}`;
+   }
+  }
+  await Promise.all(Array.from({length:workers},()=>worker()));
+  bulkProgress.textContent=failed
+   ? `Готово: ${files.length-failed} із ${files.length}. Не вдалося завантажити: ${failed}.`
+   : `Готово — ${files.length} фото завантажено.`;
+ }catch(e){
+  console.error(e);
+  bulkProgress.textContent='Не вдалося завантажити всі фотографії. Спробуйте ще раз.';
+ }finally{
+  downloadAllBtn.disabled=false;
+ }
+}
+
+const pageObserver=new IntersectionObserver(entries=>{
+ if(entries.some(e=>e.isIntersecting))loadNextPage();
+},{rootMargin:'900px 0px'});
+pageObserver.observe(moreSentinel);
+
+openBtn.onclick=openCode;
+codeInput.onkeydown=e=>{if(e.key==='Enter')openCode()};
+closeBtn.onclick=closeViewer;
+overlay.onclick=e=>{if(e.target===overlay)closeViewer()};
+downloadAllBtn.onclick=downloadAll;
 document.onkeydown=e=>{if(e.key==='Escape')closeViewer()};
 
 (async()=>{
