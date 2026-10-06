@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v5.4">
+<meta name="generator" content="Photo Zhive Gallery v5.5">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -318,23 +318,55 @@ async function loadThumbMeta(file){
   return {file,full,thumbUrl,ratio:thumb.ratio,src:thumb.src,ok:true};
  }
 
- // Some HikBox files return a valid list entry but fail get_thumbnail.
- // Fall back to the original for this file only. Lazy batching still limits
- // how many originals can be requested at once.
- console.warn('Thumbnail unavailable, trying original:',file.name);
- const originalUrl=apiUrl('download',full);
- const original=await probeImage(originalUrl,20000);
+ // HikBox may reject get_thumbnail even though the original is downloadable.
+ // Fetch the original as a Blob so browser image loading is independent of
+ // response headers / Content-Disposition returned by the download endpoint.
+ console.warn('Thumbnail unavailable, fetching original blob:',file.name);
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),30000);
 
- if(original.ok){
-  console.info('Original fallback loaded:',file.name);
-  return {
-   file,full,thumbUrl:originalUrl,ratio:original.ratio,
-   src:original.src,ok:true,fallback:true
-  };
+ try{
+  const r=await fetch(apiUrl('download',full),{
+   mode:'cors',
+   cache:'no-store',
+   signal:controller.signal
+  });
+  if(!r.ok)throw new Error('HTTP '+r.status);
+
+  const blob=await r.blob();
+  console.info(
+   'Original response:',
+   file.name,
+   'HTTP',r.status,
+   'type',blob.type||'(none)',
+   'size',blob.size
+  );
+
+  if(!blob.size)throw new Error('EMPTY_BLOB');
+
+  const objectUrl=URL.createObjectURL(blob);
+  const original=await probeImage(objectUrl,15000);
+
+  if(original.ok){
+   console.info('Original blob fallback loaded:',file.name);
+   return {
+    file,full,thumbUrl:objectUrl,ratio:original.ratio,
+    src:objectUrl,ok:true,fallback:true,objectUrl
+   };
+  }
+
+  URL.revokeObjectURL(objectUrl);
+  throw new Error('BLOB_NOT_IMAGE');
+ }catch(e){
+  console.warn(
+   'Original blob fallback failed:',
+   file.name,
+   e.name==='AbortError'?'TIMEOUT':e.message
+  );
+  return {file,full,thumbUrl,ratio:1.5,src:'',ok:false};
+ }finally{
+  clearTimeout(timer);
  }
-
- console.warn('Thumbnail and original failed:',file.name);
- return {file,full,thumbUrl,ratio:1.5,src:'',ok:false};
 }
 
 function hasMore(){
