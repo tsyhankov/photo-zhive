@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v5.3">
+<meta name="generator" content="Photo Zhive Gallery v5.4">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -283,42 +283,58 @@ function makeCard(file,full,thumbUrl,ratio,src){
  return card;
 }
 
-function loadThumbMeta(file){
- const full=currentFolder+'/'+file.name;
- const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
+function probeImage(url,timeoutMs=12000){
  return new Promise(resolve=>{
-  const preload=new Image();
-  preload.decoding='async';
+  const img=new Image();
+  img.decoding='async';
   let settled=false;
   let timer=null;
 
-  const finish=(result)=>{
+  const finish=(ok)=>{
    if(settled)return;
    settled=true;
    if(timer)clearTimeout(timer);
-   preload.onload=null;
-   preload.onerror=null;
-   resolve(result);
+   img.onload=null;
+   img.onerror=null;
+   const ratio=ok&&img.naturalWidth&&img.naturalHeight
+    ? img.naturalWidth/img.naturalHeight : 1.5;
+   resolve({ok,ratio,src:ok?img.src:''});
   };
 
-  // HikBox can occasionally leave a thumbnail request pending indefinitely.
-  // Never allow one thumbnail to block the whole gallery batch.
-  timer=setTimeout(()=>{
-   console.warn('Thumbnail timeout:',file.name);
-   finish({file,full,thumbUrl,ratio:1.5,src:'',ok:false});
-  },12000);
-
-  preload.onload=()=>{
-   const ratio=(preload.naturalWidth&&preload.naturalHeight)
-    ? preload.naturalWidth/preload.naturalHeight : 1.5;
-   finish({file,full,thumbUrl,ratio,src:preload.src,ok:true});
-  };
-  preload.onerror=()=>{
-   console.warn('Thumbnail failed:',file.name);
-   finish({file,full,thumbUrl,ratio:1.5,src:'',ok:false});
-  };
-  preload.src=thumbUrl;
+  timer=setTimeout(()=>finish(false),timeoutMs);
+  img.onload=()=>finish(true);
+  img.onerror=()=>finish(false);
+  img.src=url;
  });
+}
+
+async function loadThumbMeta(file){
+ const full=currentFolder+'/'+file.name;
+ const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
+
+ // Fast path: use HikBox thumbnail when available.
+ const thumb=await probeImage(thumbUrl,12000);
+ if(thumb.ok){
+  return {file,full,thumbUrl,ratio:thumb.ratio,src:thumb.src,ok:true};
+ }
+
+ // Some HikBox files return a valid list entry but fail get_thumbnail.
+ // Fall back to the original for this file only. Lazy batching still limits
+ // how many originals can be requested at once.
+ console.warn('Thumbnail unavailable, trying original:',file.name);
+ const originalUrl=apiUrl('download',full);
+ const original=await probeImage(originalUrl,20000);
+
+ if(original.ok){
+  console.info('Original fallback loaded:',file.name);
+  return {
+   file,full,thumbUrl:originalUrl,ratio:original.ratio,
+   src:original.src,ok:true,fallback:true
+  };
+ }
+
+ console.warn('Thumbnail and original failed:',file.name);
+ return {file,full,thumbUrl,ratio:1.5,src:'',ok:false};
 }
 
 function hasMore(){
