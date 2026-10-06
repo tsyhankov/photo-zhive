@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v5.1">
+<meta name="generator" content="Photo Zhive Gallery v6.0-preview-cache">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -269,9 +269,14 @@ function makeCard(file,full,thumbUrl,ratio,src){
  return card;
 }
 
+function previewUrl(file){
+ const base=(HIKBOX.previewBase||'https://storage.photo-zhive.com.ua/preview').replace(/\/$/,'');
+ return base+'/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(file.name);
+}
+
 function loadThumbMeta(file){
  const full=currentFolder+'/'+file.name;
- const thumbUrl=apiUrl('get_thumbnail',full,{quality:'1'});
+ const thumbUrl=previewUrl(file);
  return new Promise(resolve=>{
   const preload=new Image();
   preload.decoding='async';
