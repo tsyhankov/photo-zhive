@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v5.1">
+<meta name="generator" content="Photo Zhive Gallery v5.2">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -275,12 +275,34 @@ function loadThumbMeta(file){
  return new Promise(resolve=>{
   const preload=new Image();
   preload.decoding='async';
+  let settled=false;
+  let timer=null;
+
+  const finish=(result)=>{
+   if(settled)return;
+   settled=true;
+   if(timer)clearTimeout(timer);
+   preload.onload=null;
+   preload.onerror=null;
+   resolve(result);
+  };
+
+  // HikBox can occasionally leave a thumbnail request pending indefinitely.
+  // Never allow one thumbnail to block the whole gallery batch.
+  timer=setTimeout(()=>{
+   console.warn('Thumbnail timeout:',file.name);
+   finish({file,full,thumbUrl,ratio:1.5,src:'',ok:false});
+  },12000);
+
   preload.onload=()=>{
    const ratio=(preload.naturalWidth&&preload.naturalHeight)
     ? preload.naturalWidth/preload.naturalHeight : 1.5;
-   resolve({file,full,thumbUrl,ratio,src:preload.src,ok:true});
+   finish({file,full,thumbUrl,ratio,src:preload.src,ok:true});
   };
-  preload.onerror=()=>resolve({file,full,thumbUrl,ratio:1.5,src:'',ok:false});
+  preload.onerror=()=>{
+   console.warn('Thumbnail failed:',file.name);
+   finish({file,full,thumbUrl,ratio:1.5,src:'',ok:false});
+  };
   preload.src=thumbUrl;
  });
 }
