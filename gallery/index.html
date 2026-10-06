@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v5.2">
+<meta name="generator" content="Photo Zhive Gallery v5.3">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -162,15 +162,29 @@ async function loadConfig(){
  HIKBOX=await r.json();
 }
 
+function strictEncode(value){
+ return encodeURIComponent(String(value))
+  .replace(/[!'()*]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase());
+}
+
 function apiUrl(action,path,extra={}){
- const p=new URLSearchParams({
+ const params={
   access_token:HIKBOX.accessToken,
-  action,path,
+  action,
+  path,
   share_id:HIKBOX.shareId,
   link_mode:'1',
   ...extra
- });
- return HIKBOX.apiBase+'?'+p.toString();
+ };
+
+ // HikBox is sensitive to query encoding in file paths.
+ // Encode every key/value explicitly: spaces stay %20 (not "+"),
+ // and characters such as apostrophes are always percent-encoded.
+ const query=Object.entries(params)
+  .map(([key,value])=>strictEncode(key)+'='+strictEncode(value))
+  .join('&');
+
+ return HIKBOX.apiBase+'?'+query;
 }
 
 function openCode(){
