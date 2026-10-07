@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v8.3.3-visitors-fix">
+<meta name="generator" content="Photo Zhive Gallery v8.3.4-progressive-load">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -502,7 +502,6 @@ async function renderNextBatch(sizeOverride=null){
 
  try{
   await ensurePendingFiles();
- await trackGalleryView(currentCode);
   if(!pendingFiles.length){
    if(!renderedItems.length&&currentPage>=totalPages){
     status.hidden=false;
@@ -518,16 +517,17 @@ async function renderNextBatch(sizeOverride=null){
 
   // Only this small batch reaches HikBox. The remaining 100/500 files
   // stay as metadata until the user approaches the bottom of the gallery.
-  const prepared=await Promise.all(files.map(loadThumbMeta));
-
-  for(const p of prepared){
-   if(!p.ok)continue;
+  // Render each preview as soon as it arrives. One slow preview must not
+  // hold the entire first screen behind "Завантажуємо фотографії…".
+  await Promise.all(files.map(async file=>{
+   const p=await loadThumbMeta(file);
+   if(!p.ok)return;
    const card=makeCard(p.file,p.full,p.thumbUrl,p.ratio,p.src);
    const item={card,ratio:p.ratio,file:p.file,full:p.full,thumbUrl:p.thumbUrl};
    renderedItems.push(item);
    placeExistingCard(item);
    updateSelectionUI();
-  }
+  }));
  }catch(e){
   console.error(e);
   status.hidden=false;
@@ -568,6 +568,8 @@ async function loadGallery(code){
 
  rebuildMasonryIfNeeded(true);
  await ensurePendingFiles();
+ // Analytics must never delay gallery rendering.
+ trackGalleryView(currentCode);
 
  if(photographerView){
   // The photographer link is a strict read-only view of the client's saved selection.
