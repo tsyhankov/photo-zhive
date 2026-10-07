@@ -1,8 +1,9 @@
 {
   "apiBase": "https://storage.photo-zhive.com.ua/rest/1.1/share",
-  "accessToken": "a36fab576950bfb1ef127d6bf209861a:1791369564",
+  "accessToken": "e247cd7a2fc53a0146e6de89e21aa3fe:1791370798",
   "shareId": "85XQ91",
   "rootPath": "/drives/disk_a1/Share/ext share",
   "expiresAt": "2026-11-05T17:44:03.162000Z",
-  "zipBase": "https://storage.photo-zhive.com.ua/zip"
+  "zipBase": "https://storage.photo-zhive.com.ua/zip",
+  "previewBase": "https://storage.photo-zhive.com.ua/preview"
 }
