@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v8.2-refactor">
+<meta name="generator" content="Photo Zhive Gallery v8.3.1-stats-fix">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -179,6 +179,26 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid curre
 
 <script>
 const API_BASE='https://storage.photo-zhive.com.ua';
+
+function analyticsVisitor(){
+ try{const key='pz_visitor_v1';let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem(key,id)}return id}catch{return ''}
+}
+async function trackGalleryView(code){
+ if(!code)return;
+ try{
+  await fetch(API_BASE+'/api/event/view/'+encodeURIComponent(code),{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({visitor:analyticsVisitor()}),cache:'no-store'
+  });
+ }catch(e){console.warn('Visit analytics failed',e)}
+}
+function trackOriginalDownload(code){
+ if(!code)return;
+ fetch(API_BASE+'/api/event/download-original/'+encodeURIComponent(code),{
+  method:'POST',headers:{'Content-Type':'application/json'},body:'{}',keepalive:true
+ }).catch(()=>{});
+}
+
 let selected=new Set();
 
 const PAGE_SIZE=500;
@@ -472,6 +492,7 @@ async function renderNextBatch(sizeOverride=null){
 
  try{
   await ensurePendingFiles();
+ await trackGalleryView(currentCode);
   if(!pendingFiles.length){
    if(!renderedItems.length&&currentPage>=totalPages){
     status.hidden=false;
@@ -590,6 +611,9 @@ async function showPhoto(name,path,thumbUrl){
   }
  }
 }
+
+
+downloadBtn.addEventListener('click',()=>trackOriginalDownload(currentCode));
 
 function closeViewer(){
  if(viewerFetchController){
