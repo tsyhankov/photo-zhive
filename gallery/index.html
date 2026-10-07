@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v6.0-preview-cache">
+<meta name="generator" content="Photo Zhive Gallery v7.1-private-api-selections">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -57,6 +57,14 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 .gallery-progress-count{font-size:12px;color:#96918a}
 @keyframes gallerySpin{to{transform:rotate(360deg)}}
 
+
+.select-btn{position:absolute;left:10px;top:10px;width:40px;height:40px;padding:0;border-radius:999px;background:rgba(255,255,255,.94);color:#171717;z-index:3;font-size:22px;line-height:1;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.select-btn.selected{background:#171717;color:#fff}
+.selection-summary{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 15px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px}
+.selection-filter{height:42px;padding:0 15px;background:transparent;color:var(--text);border:1px solid var(--line)}
+.selection-filter.active{background:#171717;color:#fff}
+.finish-selection{height:42px;padding:0 15px}
+.viewer-select{position:fixed;top:18px;left:50%;transform:translateX(-50%);height:42px;background:#fff;color:#111}
 </style>
   <link rel="icon" type="image/png" href="../Images/favicon.png">
   <link rel="apple-touch-icon" href="../Images/favicon.png">
@@ -82,6 +90,9 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
     <div><div class="brand">Photo Zhive</div><h1 class="gallery-title" id="galleryTitle">Галерея</h1></div>
     <div class="gallery-actions">
       <span class="count" id="count"></span>
+      <span class="selection-summary" id="selectionSummary">♡ Вибрано: 0</span>
+      <button class="selection-filter" id="selectionFilter" type="button">Показати вибране</button>
+      <button class="finish-selection" id="finishSelection" type="button">Завершити вибір</button>
       <button class="download-all" id="downloadAllBtn" type="button" hidden aria-label="Завантажити всі оригінали">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
         <span>Завантажити всю галерею</span>
@@ -111,13 +122,16 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 
 <div class="overlay" id="overlay">
 <a class="download" id="downloadBtn" href="#" download>Завантажити оригінал</a>
+<button class="viewer-select" id="viewerSelect" type="button">♡ Вибрати</button>
 <button class="close" id="closeBtn" type="button">Закрити ✕</button>
 <img id="viewer" alt="">
 <div class="viewer-loading" id="viewerLoading">Завантаження оригіналу…</div>
 </div>
 
 <script>
-let HIKBOX=null;
+const API_BASE='https://storage.photo-zhive.com.ua';
+let selected=new Set();
+let selectionId='';
 
 const PAGE_SIZE=500;
 const FIRST_BATCH=12;
@@ -145,7 +159,9 @@ const entryView=$('entryView'),galleryView=$('galleryView'),codeInput=$('codeInp
 entryError=$('entryError'),galleryTitle=$('galleryTitle'),count=$('count'),status=$('status'),grid=$('grid'),
 overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn'),viewerLoading=$('viewerLoading'),
 downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel'),downloadFrame=$('downloadFrame'),
-loadingMore=$('loadingMore'),loadingMoreText=$('loadingMoreText'),loadingProgressCount=$('loadingProgressCount');
+loadingMore=$('loadingMore'),loadingMoreText=$('loadingMoreText'),loadingProgressCount=$('loadingProgressCount'),
+selectionSummary=$('selectionSummary'),selectionFilter=$('selectionFilter'),finishSelection=$('finishSelection'),viewerSelect=$('viewerSelect');
+let selectedOnly=false,currentViewerName='',selectionFinished=false;
 
 let masonryCols=[];
 let masonryHeights=[];
@@ -156,21 +172,17 @@ function getCode(){return cleanCode(new URLSearchParams(location.search).get('co
 function isImage(n=''){return /\.(jpe?g|png|webp|gif|heic)$/i.test(n)}
 function displayTitle(code){return code.replace(/[-_]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase())}
 
-async function loadConfig(){
- const r=await fetch('./config.json?ts='+Date.now(),{cache:'no-store'});
- if(!r.ok)throw new Error('CONFIG');
- HIKBOX=await r.json();
+function getSelectionId(){
+ const k='photozhive-selection-id';
+ let v=localStorage.getItem(k);
+ if(!v){v=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'');localStorage.setItem(k,v)}
+ return v;
 }
-
-function apiUrl(action,path,extra={}){
- const p=new URLSearchParams({
-  access_token:HIKBOX.accessToken,
-  action,path,
-  share_id:HIKBOX.shareId,
-  link_mode:'1',
-  ...extra
- });
- return HIKBOX.apiBase+'?'+p.toString();
+function apiPath(path){return API_BASE+path}
+async function apiJson(path,options={}){
+ const r=await fetch(apiPath(path),{cache:'no-store',...options});
+ if(!r.ok)throw new Error(r.status===404?'NOT_FOUND':'HTTP '+r.status);
+ return r.json();
 }
 
 function openCode(){
@@ -185,13 +197,9 @@ function openCode(){
 }
 
 async function fetchPage(page){
- const r=await fetch(apiUrl('get_list',currentFolder,{
-  mode:'3',page:String(page),pagesize:String(PAGE_SIZE)
- }),{mode:'cors',cache:'no-store'});
- let data={}; try{data=await r.json()}catch(_){}
- if(r.status===401||r.status===403||data.code===401||data.code===403)throw new Error('TOKEN');
- if(!r.ok||data.code)throw new Error(data.msg||('HTTP '+r.status));
- return data;
+ if(page>1)return {list:[],totalpage:1,count:totalPhotoCount};
+ const data=await apiJson('/api/gallery/'+encodeURIComponent(currentCode));
+ return {list:data.files||[],totalpage:1,count:Number(data.count)||0};
 }
 
 function desiredColumnCount(){
@@ -244,13 +252,56 @@ function rebuildMasonryIfNeeded(force=false){
 function makeDownloadIcon(path,name){
  const a=document.createElement('a');
  a.className='item-download';
- a.href=apiUrl('download',path);
+ a.href=apiPath('/api/original/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(name));
  a.download=name;
  a.title='Завантажити оригінал';
  a.setAttribute('aria-label','Завантажити оригінал '+name);
  a.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>';
  a.addEventListener('click',e=>e.stopPropagation());
  return a;
+}
+
+
+async function loadSelections(){
+ try{
+  const d=await apiJson('/api/selections/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId));
+  selected=new Set(d.files||[]);selectionFinished=!!d.finished;updateSelectionUI();
+ }catch(e){
+  console.error('Selection load failed',e);
+  selected=new Set();selectionFinished=false;updateSelectionUI();
+ }
+}
+async function saveSelections(finished=false){
+ const d=await apiJson('/api/selections/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId),{
+  method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({files:[...selected],finished})
+ });
+ selectionFinished=!!d.finished;
+ updateSelectionUI();
+ return d;
+}
+function updateSelectionUI(){
+ selectionSummary.textContent='♥ Вибрано: '+selected.size;
+ finishSelection.textContent=selectionFinished?'Вибір надіслано ✓':'Завершити вибір';
+ finishSelection.disabled=selectionFinished;
+ selectionFilter.hidden=selected.size===0;
+ selectionFilter.classList.toggle('active',selectedOnly);
+ selectionFilter.textContent=selectedOnly?'Показати всі':'Показати вибране';
+ for(const item of renderedItems){
+  const on=selected.has(item.file.name);
+  item.card.hidden=selectedOnly&&!on;
+  const b=item.card.querySelector('.select-btn');
+  if(b){b.classList.toggle('selected',on);b.textContent=on?'♥':'♡';b.setAttribute('aria-label',on?'Прибрати з вибраного':'Додати до вибраного')}
+ }
+ if(currentViewerName){
+  const on=selected.has(currentViewerName);viewerSelect.textContent=on?'♥ Вибрано':'♡ Вибрати';
+ }
+}
+async function toggleSelected(name){
+ if(selected.has(name))selected.delete(name);else selected.add(name);
+ selectionFinished=false;
+ updateSelectionUI();
+ try{await saveSelections(false)}catch(e){console.error('Selection save failed',e)}
 }
 
 function makeCard(file,full,thumbUrl,ratio,src){
@@ -264,14 +315,18 @@ function makeCard(file,full,thumbUrl,ratio,src){
  img.src=src;
 
  card.appendChild(img);
+ const pick=document.createElement('button');pick.className='select-btn';pick.type='button';pick.textContent=selected.has(file.name)?'♥':'♡';
+ if(selected.has(file.name))pick.classList.add('selected');
+ pick.setAttribute('aria-label',selected.has(file.name)?'Прибрати з вибраного':'Додати до вибраного');
+ pick.addEventListener('click',e=>{e.stopPropagation();toggleSelected(file.name)});
+ card.appendChild(pick);
  card.appendChild(makeDownloadIcon(full,file.name));
  card.addEventListener('click',()=>showPhoto(file.name,full,thumbUrl));
  return card;
 }
 
 function previewUrl(file){
- const base=(HIKBOX.previewBase||'https://storage.photo-zhive.com.ua/preview').replace(/\/$/,'');
- return base+'/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(file.name);
+ return apiPath('/preview/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(file.name));
 }
 
 function loadThumbMeta(file){
@@ -373,6 +428,7 @@ async function renderNextBatch(sizeOverride=null){
    const item={card,ratio:p.ratio,file:p.file,full:p.full,thumbUrl:p.thumbUrl};
    renderedItems.push(item);
    placeExistingCard(item);
+   updateSelectionUI();
   }
  }catch(e){
   console.error(e);
@@ -405,7 +461,9 @@ async function loadGallery(code){
  galleryView.hidden=false;
  galleryTitle.textContent=displayTitle(code);
  document.title=galleryTitle.textContent+' — Photo Zhive';
- currentFolder=HIKBOX.rootPath+'/'+code;
+ currentFolder=code;
+ selectionId=getSelectionId();
+ await loadSelections();
 
  rebuildMasonryIfNeeded(true);
  await ensurePendingFiles();
@@ -416,20 +474,22 @@ async function loadGallery(code){
 }
 
 async function showPhoto(name,path,thumbUrl){
+ currentViewerName=name;
+ updateSelectionUI();
  if(viewerFetchController)viewerFetchController.abort();
  viewerFetchController=new AbortController();
  const controller=viewerFetchController;
 
  viewer.alt=name;
  viewer.src=thumbUrl;
- downloadBtn.href=apiUrl('download',path);
+ downloadBtn.href=apiPath('/api/original/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(name));
  downloadBtn.setAttribute('download',name);
  overlay.classList.add('open');
  document.body.style.overflow='hidden';
  viewerLoading.classList.add('show');
 
  try{
-  const r=await fetch(apiUrl('download',path),{
+  const r=await fetch(apiPath('/api/original/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(name)),{
    mode:'cors',
    cache:'no-store',
    signal:controller.signal
@@ -459,6 +519,7 @@ function closeViewer(){
   viewerFetchController=null;
  }
  overlay.classList.remove('open');
+ currentViewerName='';
  viewer.src='';
  viewerLoading.classList.remove('show');
  document.body.style.overflow='';
@@ -475,10 +536,9 @@ function setDownloadAllState(label,disabled){
 }
 
 function downloadAll(){
- if(!currentCode||!HIKBOX.zipBase||downloadAllBtn.disabled)return;
+ if(!currentCode||downloadAllBtn.disabled)return;
 
- const base=HIKBOX.zipBase.replace(/\/$/,'');
- const zipUrl=base+'/'+encodeURIComponent(currentCode)+'.zip';
+ const zipUrl=apiPath('/zip/'+encodeURIComponent(currentCode)+'.zip');
 
  setDownloadAllState('Готуємо ZIP…',true);
  bulkProgress.textContent='Готуємо архів. Завантаження почнеться автоматично.';
@@ -524,11 +584,29 @@ codeInput.onkeydown=e=>{if(e.key==='Enter')openCode()};
 closeBtn.onclick=closeViewer;
 overlay.onclick=e=>{if(e.target===overlay)closeViewer()};
 downloadAllBtn.onclick=downloadAll;
+selectionFilter.onclick=()=>{selectedOnly=!selectedOnly;updateSelectionUI()};
+viewerSelect.onclick=e=>{e.stopPropagation();if(currentViewerName)toggleSelected(currentViewerName)};
+finishSelection.onclick=async()=>{
+ if(!selected.size){
+  bulkProgress.textContent='Спочатку виберіть хоча б одну фотографію.';
+  return;
+ }
+ finishSelection.disabled=true;
+ finishSelection.textContent='Надсилаємо…';
+ bulkProgress.textContent='';
+ try{
+  await saveSelections(true);
+  bulkProgress.textContent='Вибір збережено. Фотограф отримав повідомлення.';
+ }catch(e){
+  selectionFinished=false;
+  updateSelectionUI();
+  bulkProgress.textContent='Не вдалося надіслати вибір. Спробуйте ще раз.';
+ }
+};
 document.onkeydown=e=>{if(e.key==='Escape')closeViewer()};
 
 (async()=>{
  try{
-  await loadConfig();
   const code=getCode();
   if(code)await loadGallery(code);
   else codeInput.focus();
