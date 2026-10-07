@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v7.1-private-api-selections">
+<meta name="generator" content="Photo Zhive Gallery v7.3-photographer-selection-view">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -65,6 +65,11 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 .selection-filter.active{background:#171717;color:#fff}
 .finish-selection{height:42px;padding:0 15px}
 .viewer-select{position:fixed;top:18px;left:50%;transform:translateX(-50%);height:42px;background:#fff;color:#111}
+
+.download-selected{height:42px;padding:0 14px;background:transparent;color:var(--text);border:1px solid var(--line);display:inline-flex;align-items:center;gap:8px}
+.download-selected:hover{background:#fff}
+.download-selected svg{width:16px;height:16px}
+.download-selected:disabled{opacity:.55;cursor:default}
 </style>
   <link rel="icon" type="image/png" href="../Images/favicon.png">
   <link rel="apple-touch-icon" href="../Images/favicon.png">
@@ -92,6 +97,10 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
       <span class="count" id="count"></span>
       <span class="selection-summary" id="selectionSummary">♡ Вибрано: 0</span>
       <button class="selection-filter" id="selectionFilter" type="button">Показати вибране</button>
+      <button class="download-selected" id="downloadSelected" type="button" hidden aria-label="Завантажити вибрані фотографії">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        <span>Завантажити вибране</span>
+      </button>
       <button class="finish-selection" id="finishSelection" type="button">Завершити вибір</button>
       <button class="download-all" id="downloadAllBtn" type="button" hidden aria-label="Завантажити всі оригінали">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
@@ -160,8 +169,8 @@ entryError=$('entryError'),galleryTitle=$('galleryTitle'),count=$('count'),statu
 overlay=$('overlay'),viewer=$('viewer'),downloadBtn=$('downloadBtn'),closeBtn=$('closeBtn'),viewerLoading=$('viewerLoading'),
 downloadAllBtn=$('downloadAllBtn'),bulkProgress=$('bulkProgress'),moreSentinel=$('moreSentinel'),downloadFrame=$('downloadFrame'),
 loadingMore=$('loadingMore'),loadingMoreText=$('loadingMoreText'),loadingProgressCount=$('loadingProgressCount'),
-selectionSummary=$('selectionSummary'),selectionFilter=$('selectionFilter'),finishSelection=$('finishSelection'),viewerSelect=$('viewerSelect');
-let selectedOnly=false,currentViewerName='',selectionFinished=false;
+selectionSummary=$('selectionSummary'),selectionFilter=$('selectionFilter'),downloadSelected=$('downloadSelected'),finishSelection=$('finishSelection'),viewerSelect=$('viewerSelect');
+let selectedOnly=false,currentViewerName='',selectionFinished=false,photographerView=false;
 
 let masonryCols=[];
 let masonryHeights=[];
@@ -246,7 +255,11 @@ function rebuildMasonryIfNeeded(force=false){
  const wanted=desiredColumnCount();
  if(!force&&wanted===masonryColumnCount&&masonryCols.length===wanted)return;
  createColumns(wanted);
- for(const item of renderedItems)placeExistingCard(item);
+ const items=selectedOnly?renderedItems.filter(item=>selected.has(item.file.name)):renderedItems;
+ for(const item of items){
+  item.card.hidden=false;
+  placeExistingCard(item);
+ }
 }
 
 function makeDownloadIcon(path,name){
@@ -266,6 +279,7 @@ async function loadSelections(){
  try{
   const d=await apiJson('/api/selections/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId));
   selected=new Set(d.files||[]);selectionFinished=!!d.finished;updateSelectionUI();
+  if(photographerView)setTimeout(()=>setSelectedOnly(true),0);
  }catch(e){
   console.error('Selection load failed',e);
   selected=new Set();selectionFinished=false;updateSelectionUI();
@@ -284,23 +298,29 @@ function updateSelectionUI(){
  selectionSummary.textContent='♥ Вибрано: '+selected.size;
  finishSelection.textContent=selectionFinished?'Вибір надіслано ✓':'Завершити вибір';
  finishSelection.disabled=selectionFinished;
- selectionFilter.hidden=selected.size===0;
+ finishSelection.hidden=photographerView;
+ selectionFilter.hidden=photographerView || selected.size===0;
+ downloadSelected.hidden=selected.size===0;
  selectionFilter.classList.toggle('active',selectedOnly);
  selectionFilter.textContent=selectedOnly?'Показати всі':'Показати вибране';
+
  for(const item of renderedItems){
   const on=selected.has(item.file.name);
-  item.card.hidden=selectedOnly&&!on;
   const b=item.card.querySelector('.select-btn');
   if(b){b.classList.toggle('selected',on);b.textContent=on?'♥':'♡';b.setAttribute('aria-label',on?'Прибрати з вибраного':'Додати до вибраного')}
  }
  if(currentViewerName){
   const on=selected.has(currentViewerName);viewerSelect.textContent=on?'♥ Вибрано':'♡ Вибрати';
+  viewerSelect.hidden=photographerView;
  }
+ if(selectedOnly) rebuildMasonryIfNeeded(true);
 }
 async function toggleSelected(name){
+ if(photographerView)return;
  if(selected.has(name))selected.delete(name);else selected.add(name);
  selectionFinished=false;
  updateSelectionUI();
+ if(selectedOnly)rebuildMasonryIfNeeded(true);
  try{await saveSelections(false)}catch(e){console.error('Selection save failed',e)}
 }
 
@@ -316,6 +336,7 @@ function makeCard(file,full,thumbUrl,ratio,src){
 
  card.appendChild(img);
  const pick=document.createElement('button');pick.className='select-btn';pick.type='button';pick.textContent=selected.has(file.name)?'♥':'♡';
+ if(photographerView)pick.hidden=true;
  if(selected.has(file.name))pick.classList.add('selected');
  pick.setAttribute('aria-label',selected.has(file.name)?'Прибрати з вибраного':'Додати до вибраного');
  pick.addEventListener('click',e=>{e.stopPropagation();toggleSelected(file.name)});
@@ -350,6 +371,12 @@ function hasMore(){
 }
 
 function updateProgress(isLoading=false){
+ if(selectedOnly){
+  loadingMore.hidden=true;
+  moreSentinel.style.display='none';
+  return;
+ }
+ moreSentinel.style.display='';
  const shown=renderedItems.length;
  const total=Math.max(totalPhotoCount,shown);
  count.textContent=total?`${total} фото`:'';
@@ -443,6 +470,7 @@ async function renderNextBatch(sizeOverride=null){
 }
 
 function sentinelNearViewport(){
+ if(selectedOnly)return false;
  const r=moreSentinel.getBoundingClientRect();
  return r.top < window.innerHeight+PRELOAD_MARGIN;
 }
@@ -462,8 +490,12 @@ async function loadGallery(code){
  galleryTitle.textContent=displayTitle(code);
  document.title=galleryTitle.textContent+' — Photo Zhive';
  currentFolder=code;
- selectionId=getSelectionId();
+ const params=new URLSearchParams(location.search);
+ const linkedSelection=params.get('selection');
+ photographerView=params.get('view')==='selected' && !!linkedSelection;
+ selectionId=linkedSelection || getSelectionId();
  await loadSelections();
+ if(photographerView) selectedOnly=true;
 
  rebuildMasonryIfNeeded(true);
  await ensurePendingFiles();
@@ -555,6 +587,42 @@ function downloadAll(){
  },7000);
 }
 
+function downloadSelectedPhotos(){
+ if(!currentCode||!selectionId||!selected.size||downloadSelected.disabled)return;
+ const span=downloadSelected.querySelector('span');
+ downloadSelected.disabled=true;
+ if(span)span.textContent='Готуємо ZIP…';
+ bulkProgress.textContent='Готуємо архів із '+selected.size+' вибраних фото.';
+ downloadFrame.src=apiPath('/zip-selected/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId)+'.zip?ts='+Date.now());
+ setTimeout(()=>{
+  if(span)span.textContent='Завантажити вибране';
+  downloadSelected.disabled=false;
+  bulkProgress.textContent='';
+ },5000);
+}
+
+async function setSelectedOnly(next){
+ selectedOnly=next;
+ if(selectedOnly){
+  // A saved selection may contain photos not rendered yet after page reload.
+  // Their metadata is already in pendingFiles, so render only those missing selected photos.
+  const missing=pendingFiles.filter(f=>selected.has(f.name));
+  if(missing.length){
+   const names=new Set(missing.map(f=>f.name));
+   pendingFiles=pendingFiles.filter(f=>!names.has(f.name));
+   const prepared=await Promise.all(missing.map(loadThumbMeta));
+   for(const p of prepared){
+    if(!p.ok)continue;
+    const card=makeCard(p.file,p.full,p.thumbUrl,p.ratio,p.src);
+    renderedItems.push({card,ratio:p.ratio,file:p.file,full:p.full,thumbUrl:p.thumbUrl});
+   }
+  }
+ }
+ rebuildMasonryIfNeeded(true);
+ updateSelectionUI();
+ updateProgress(false);
+}
+
 const viewportObserver=new IntersectionObserver(entries=>{
  if(entries.some(e=>e.isIntersecting))fillAhead();
 },{rootMargin:`${PRELOAD_MARGIN}px 0px`});
@@ -584,7 +652,8 @@ codeInput.onkeydown=e=>{if(e.key==='Enter')openCode()};
 closeBtn.onclick=closeViewer;
 overlay.onclick=e=>{if(e.target===overlay)closeViewer()};
 downloadAllBtn.onclick=downloadAll;
-selectionFilter.onclick=()=>{selectedOnly=!selectedOnly;updateSelectionUI()};
+selectionFilter.onclick=()=>setSelectedOnly(!selectedOnly);
+downloadSelected.onclick=downloadSelectedPhotos;
 viewerSelect.onclick=e=>{e.stopPropagation();if(currentViewerName)toggleSelected(currentViewerName)};
 finishSelection.onclick=async()=>{
  if(!selected.size){
