@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v8.0-production">
+<meta name="generator" content="Photo Zhive Gallery v8.1-server-selection">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -145,7 +145,7 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 <script>
 const API_BASE='https://storage.photo-zhive.com.ua';
 let selected=new Set();
-let selectionId='';
+let ;
 
 const PAGE_SIZE=500;
 const FIRST_BATCH=12;
@@ -186,12 +186,6 @@ function getCode(){return cleanCode(new URLSearchParams(location.search).get('co
 function isImage(n=''){return /\.(jpe?g|png|webp|gif|heic)$/i.test(n)}
 function displayTitle(code){return code.replace(/[-_]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase())}
 
-function getSelectionId(){
- const k='photozhive-selection-id';
- let v=localStorage.getItem(k);
- if(!v){v=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'');localStorage.setItem(k,v)}
- return v;
-}
 function apiPath(path){return API_BASE+path}
 async function apiJson(path,options={}){
  const r=await fetch(apiPath(path),{cache:'no-store',...options});
@@ -282,7 +276,7 @@ function makeDownloadIcon(path,name){
 
 async function loadSelections(){
  try{
-  const d=await apiJson('/api/selections/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId));
+  const d=await apiJson('/api/selection/'+encodeURIComponent(currentCode));
   selected=new Set(d.files||[]);selectionFinished=!!d.finished;updateSelectionUI();
  }catch(e){
   console.error('Selection load failed',e);
@@ -290,7 +284,7 @@ async function loadSelections(){
  }
 }
 async function saveSelections(finished=false){
- const d=await apiJson('/api/selections/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId),{
+ const d=await apiJson('/api/selection/'+encodeURIComponent(currentCode),{
   method:'POST',headers:{'Content-Type':'application/json'},
   body:JSON.stringify({files:[...selected],finished})
  });
@@ -496,13 +490,7 @@ async function loadGallery(code){
  document.title=galleryTitle.textContent+' — Photo Zhive';
  currentFolder=code;
  const params=new URLSearchParams(location.search);
- const linkedSelection=params.get('selection');
- photographerView=params.get('view')==='selected' && !!linkedSelection;
- selectionId=linkedSelection || getSelectionId();
- if(!linkedSelection && !photographerView){
-  params.set('selection',selectionId);
-  history.replaceState(null,'',location.pathname+'?'+params.toString());
- }
+ photographerView=params.get('view')==='selected';
  await loadSelections();
  if(photographerView){ selectedOnly=true; galleryTitle.textContent='Вибір клієнта'; }
 
@@ -601,13 +589,13 @@ async function downloadAll(){
 }
 
 async function downloadSelectedPhotos(){
- if(!currentCode||!selectionId||!selected.size||downloadSelected.disabled)return;
+ if(!currentCode||!selected.size||downloadSelected.disabled)return;
  const span=downloadSelected.querySelector('span');
  downloadSelected.disabled=true;
  if(span)span.textContent='Перевіряємо…';
  bulkProgress.textContent='Перевіряємо '+selected.size+' вибраних фото…';
  try{
-  const d=await apiJson('/api/zip-ready/'+encodeURIComponent(currentCode)+'/'+encodeURIComponent(selectionId));
+  const d=await apiJson('/api/zip-ready-selected/'+encodeURIComponent(currentCode));
   if(span)span.textContent='Завантаження почалося';
   bulkProgress.textContent='ZIP передано браузеру для завантаження.';
   downloadFrame.src=apiPath(d.url)+'?ts='+Date.now();
