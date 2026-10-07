@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
+<!-- Photo Zhive main refactor v3.0 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Фотограф Дніпро | Живі та сімейні фотосесії — Фото Живе</title>
 <meta name="description" content="Шукаєте фотографа у Дніпрі? Індивідуальні, парні та сімейні фотосесії без позування та стресу. Допомога з образами, локацією. Перші фото вже завтра!">
 <meta name="keywords" content="фотограф дніпро, сімейна фотосесія дніпро, жіночий портрет дніпро, фотограф без позування">
@@ -8,7 +11,10 @@
 <!-- Для красивого відображення посилання в Telegram/Viber/Instagram -->
 <meta property="og:title" content="Фотограф Дніпро | Живі фотосесії без стресу">
 <meta property="og:description" content="Індивідуальні, парні та сімейні фотосесії. Допомога з підготовкою, комфортна атмосфера.">
-<meta property="og:image" content="https://твій-домен.com.ua/Images/hero_logo.jpg">
+<meta property="og:image" content="https://photo-zhive.com.ua/Images/hero_logo.jpg">
+<meta property="og:url" content="https://photo-zhive.com.ua/">
+<meta property="og:locale" content="uk_UA">
+<link rel="canonical" href="https://photo-zhive.com.ua/">
 <meta property="og:type" content="website">
 
 <link rel="icon" type="image/png" href="Images/favicon.png">
@@ -571,6 +577,15 @@ footer a:hover { color: #aaa; }
   .gallery-browser-content { padding: 12px; }
 }
 
+
+/* Shared interaction/accessibility primitives */
+*,*::before,*::after{box-sizing:border-box}
+a,button,[role="button"]{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 
@@ -582,14 +597,15 @@ footer a:hover { color: #aaa; }
     <h1>Живі фотосесії <i>у Дніпрі</i></h1>
     <p>100+ зйомок • Живі емоції • Без стресу</p>
     <p class="hero-personal">Я Жанна. Фотографую людей у моменти, коли вони перестають думати про камеру. Не змушую позувати — створюю ситуації, в яких фотографія виникає сама.</p>
-    <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Записатись на зйомку</a>
+    <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer" class="btn">Записатись на зйомку</a>
     <a href="#portfolio" class="scroll-btn">↓ Подивитись портфоліо</a>
   </div>
 </header>
 
+<main>
 <section class="fade" id="portfolio">
-  <h2>Моє <i>бачення</i></h2>
-  <p class="about-text">Живі моменти, взаємодія між людьми та світло, яке допомагає їх побачити.</p>
+  <h2>Мої <i>роботи</i></h2>
+  <p class="about-text">Живі моменти, справжні емоції та трохи магії світла.</p>
   
   <div class="portfolio-grid">
     <div class="portfolio-item"><img src="Images/photo1.jpg" alt="Фотосесія Дніпро" loading="lazy" decoding="async"></div>
@@ -604,7 +620,7 @@ footer a:hover { color: #aaa; }
 
   <!-- Кнопка переходу в Інстаграм -->
   <div class="portfolio-more fade">
-    <a href="https://www.instagram.com/photo_zhive/" target="_blank">Більше моїх робіт — в Instagram ➔</a>
+    <a href="https://www.instagram.com/photo_zhive/" target="_blank" rel="noopener noreferrer">Більше моїх робіт — в Instagram ➔</a>
   </div>
 </section>
 
@@ -679,7 +695,7 @@ footer a:hover { color: #aaa; }
     </div>
 
     <div class="gallery-browser" aria-label="Приклад персональної онлайн-галереї">
-      <div class="gallery-browser-bar">
+      <div class="gallery-browser-bar" aria-hidden="true">
         <span class="gallery-browser-dot"></span>
         <span class="gallery-browser-dot"></span>
         <span class="gallery-browser-dot"></span>
@@ -709,7 +725,7 @@ footer a:hover { color: #aaa; }
       <p>30 хвилин</p>
       <p>~30 фото в кольорокорекції</p>
       <strong>1 500 грн</strong>
-      <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
+      <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer" class="btn">Обрати</a>
     </div>
 
     <!-- Картка 2: Індивідуальна -->
@@ -718,7 +734,7 @@ footer a:hover { color: #aaa; }
       <p>1 година</p>
       <p>50 фото (колір) або 10 (ретуш)</p>
       <strong>2 200 грн</strong>
-      <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
+      <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer" class="btn">Обрати</a>
     </div>
 
     <!-- Картка 3: Сімейна/Парна -->
@@ -727,7 +743,7 @@ footer a:hover { color: #aaa; }
       <p>1 година</p>
       <p>60 фото (колір) або 12 (ретуш)</p>
       <strong>3 000 грн</strong>
-      <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
+      <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer" class="btn">Обрати</a>
     </div>
 
     <!-- Картка 4: Репортажна -->
@@ -736,7 +752,7 @@ footer a:hover { color: #aaa; }
       <p>Від 1 години</p>
       <p>80+ фото в кольорокорекції</p>
       <strong>4 000 грн/год</strong>
-      <a href="https://t.me/Photo_zhive" target="_blank" class="btn">Обрати</a>
+      <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer" class="btn">Обрати</a>
     </div>
 
   </div>
@@ -744,7 +760,7 @@ footer a:hover { color: #aaa; }
   <!-- Блок-підказка під цінами -->
   <div class="prices-hint fade">
     <p>Потрібен інший час або формат зйомки?</p>
-    <a href="https://t.me/Photo_zhive" target="_blank">Напишіть мені, і ми підберемо ідеальні умови</a>
+    <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer">Напишіть мені, і ми підберемо ідеальні умови</a>
   </div>
 </section>
 
@@ -755,17 +771,18 @@ footer a:hover { color: #aaa; }
   </div>
 </section>
 
+</main>
 <footer>
   <p>
     Зв'язатися зі мною:
     <br><br>
-    <a href="https://t.me/Photo_zhive" target="_blank">Telegram</a> |
-    <a href="https://www.instagram.com/photo_zhive/" target="_blank">Instagram</a>
+    <a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer">Telegram</a> |
+    <a href="https://www.instagram.com/photo_zhive/" target="_blank" rel="noopener noreferrer">Instagram</a>
   </p>
   <p style="margin-top: 30px; color: #555;">© Фото Живе. Всі права захищені.</p>
 </footer>
 
-<a href="https://t.me/Photo_zhive" target="_blank" class="fixed-btn">Написати</a>
+<a href="https://t.me/Photo_zhive" target="_blank" rel="noopener noreferrer" class="fixed-btn">Написати</a>
 
 <script>
 // 1. Плавна поява елементів при скролі

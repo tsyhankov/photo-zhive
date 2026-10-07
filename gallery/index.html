@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Галерея — Photo Zhive</title>
-<meta name="generator" content="Photo Zhive Gallery v8.1-server-selection">
+<meta name="generator" content="Photo Zhive Gallery v8.2-refactor">
 <style>
 :root{--bg:#f7f5f1;--text:#171717;--muted:#706d68;--line:#ded9d1;--white:#fff}
 *{box-sizing:border-box}
@@ -72,6 +72,41 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 .download-selected:hover{background:#fff}
 .download-selected svg{width:16px;height:16px}
 .download-selected:disabled{opacity:.55;cursor:default}
+
+@media(max-width:560px){
+ .overlay .download,.overlay .select-viewer,.overlay .close{
+  top:14px!important;width:48px!important;height:48px!important;min-width:48px!important;
+  padding:0!important;border-radius:999px!important;display:flex;align-items:center;justify-content:center;
+  font-size:0!important;line-height:1!important;box-shadow:0 2px 14px rgba(0,0,0,.18);
+ }
+ .overlay .download{left:14px!important}
+ .overlay .select-viewer{left:74px!important}
+ .overlay .close{left:auto!important;right:14px!important}
+ .overlay .download::after{content:"↓";font-size:25px;font-weight:700}
+ .overlay .select-viewer::after{content:"♡";font-size:27px;font-weight:700}
+ .overlay .select-viewer.selected::after{content:"♥"}
+ .overlay .close::after{content:"×";font-size:31px;font-weight:400}
+ .viewer-nav{width:38px!important;height:38px!important;font-size:24px!important;opacity:.78}
+ .viewer-prev{left:8px!important}.viewer-next{right:8px!important}
+ .viewer-loading{font-size:13px!important;padding:8px 13px!important;border-radius:999px!important}
+}
+
+
+/* Shared UI primitives */
+*,*::before,*::after{box-sizing:border-box}
+button,a,input{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.overlay{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+@media(max-width:560px){
+ .overlay .download{left:max(14px,env(safe-area-inset-left))!important}
+ .overlay .select-viewer{left:max(74px,calc(env(safe-area-inset-left) + 60px))!important}
+ .overlay .close{right:max(14px,env(safe-area-inset-right))!important}
+ .viewer-prev{left:max(8px,env(safe-area-inset-left))!important}
+ .viewer-next{right:max(8px,env(safe-area-inset-right))!important}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 </style>
   <link rel="icon" type="image/png" href="../Images/favicon.png">
   <link rel="apple-touch-icon" href="../Images/favicon.png">
@@ -112,8 +147,8 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
       <a class="back" href="./">← До вибору галереї</a>
     </div>
   </div>
-  <div class="bulk-progress" id="bulkProgress"></div>
-  <div class="loading" id="status">Завантаження фотографій…</div>
+  <div class="bulk-progress" id="bulkProgress" role="status" aria-live="polite"></div>
+  <div class="loading" id="status" role="status" aria-live="polite">Завантаження фотографій…</div>
   <section class="grid" id="grid"></section>
 
   <div class="gallery-loading-more" id="loadingMore" hidden aria-live="polite">
@@ -132,7 +167,7 @@ footer{border-top:1px solid var(--line);padding:22px 0 32px;color:var(--muted);f
 
 <iframe id="downloadFrame" name="downloadFrame" hidden title=""></iframe>
 
-<div class="overlay" id="overlay">
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Перегляд фотографії">
 <a class="download" id="downloadBtn" href="#" download>Завантажити оригінал</a>
 <button class="viewer-select" id="viewerSelect" type="button">♡ Вибрати</button>
 <button class="close" id="closeBtn" type="button">Закрити ✕</button>
@@ -291,6 +326,17 @@ async function saveSelections(finished=false){
  updateSelectionUI();
  return d;
 }
+function isSelected(name){return selected.has(name)}
+function applySelectionButton(button,name,compact=false){
+ if(!button)return;
+ const on=isSelected(name);
+ button.classList.toggle('selected',on);
+ button.hidden=photographerView||selectionFinished;
+ button.textContent=compact?(on?'♥':'♡'):(on?'♥ Вибрано':'♡ Вибрати');
+ button.setAttribute('aria-pressed',String(on));
+ button.setAttribute('aria-label',on?'Прибрати з вибраного':'Додати до вибраного');
+}
+
 function updateSelectionUI(){
  selectionSummary.textContent='♥ Вибрано: '+selected.size;
  finishSelection.textContent=selectionFinished?'Вибір надіслано ✓':'Завершити вибір';
@@ -303,13 +349,11 @@ function updateSelectionUI(){
  selectionFilter.textContent=selectedOnly?'Показати всі':'Показати вибране';
 
  for(const item of renderedItems){
-  const on=selected.has(item.file.name);
   const b=item.card.querySelector('.select-btn');
-  if(b){b.classList.toggle('selected',on);b.textContent=on?'♥':'♡';b.hidden=photographerView||selectionFinished;b.setAttribute('aria-label',on?'Прибрати з вибраного':'Додати до вибраного')}
+  applySelectionButton(b,item.file.name,true);
  }
  if(currentViewerName){
-  const on=selected.has(currentViewerName);viewerSelect.textContent=on?'♥ Вибрано':'♡ Вибрати';
-  viewerSelect.hidden=photographerView||selectionFinished;
+  applySelectionButton(viewerSelect,currentViewerName,false);
  }
  if(selectedOnly && !photographerView) rebuildMasonryIfNeeded(true);
 }
@@ -333,10 +377,8 @@ function makeCard(file,full,thumbUrl,ratio,src){
  img.src=src;
 
  card.appendChild(img);
- const pick=document.createElement('button');pick.className='select-btn';pick.type='button';pick.textContent=selected.has(file.name)?'♥':'♡';
- if(photographerView)pick.hidden=true;
- if(selected.has(file.name))pick.classList.add('selected');
- pick.setAttribute('aria-label',selected.has(file.name)?'Прибрати з вибраного':'Додати до вибраного');
+ const pick=document.createElement('button');pick.className='select-btn';pick.type='button';
+ applySelectionButton(pick,file.name,true);
  pick.addEventListener('click',e=>{e.stopPropagation();toggleSelected(file.name)});
  card.appendChild(pick);
  card.appendChild(makeDownloadIcon(full,file.name));
